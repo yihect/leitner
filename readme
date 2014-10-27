@@ -1,0 +1,10 @@
+//readme
+
+
+	只为演示makefile 和 CuTest 的使用，里面用了单链表，所以
+	删除/插入节点都比较麻烦。用什么比较好???
+	
+	README_cutest_cn 是 CuTest README 的翻译版。凑合着看吧。
+
+
+
