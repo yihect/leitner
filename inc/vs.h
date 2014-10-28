@@ -9,7 +9,13 @@
 #define TRIPLE_BOX_LEVEL_CNT	BOX_LEVEL_CNT*3 
 #define QUADRUPLE_BOX_LEVEL_CNT	BOX_LEVEL_CNT*4
 
+#define TEST_FULL_MOVE	1
+#if TEST_FULL_MOVE 
+#define VS_CNT_BASE	4//30
+#else
 #define VS_CNT_BASE	30
+#endif
+
 #define MAX_TRIES	3
 
 #define NO_MORE_VIS	0x4e4f4d4f	// NOMOrevi

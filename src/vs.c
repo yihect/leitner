@@ -11,6 +11,17 @@
 
 #define MIN_VIS_IN_LBOX0_TO_RELOAD	VS_CNT_BASE
 
+#if TEST_FULL_MOVE
+int box_leve_max_vs[QUADRUPLE_BOX_LEVEL_CNT]=
+{
+  1*VS_CNT_BASE,					0, 0, 2,  /* no limit */
+  3*VS_CNT_BASE,					6, 0, 4,
+  3*VS_CNT_BASE,					8, 0, 8,
+  5*VS_CNT_BASE,					10, 0, 10,
+  8*VS_CNT_BASE,					16, 0, 16,
+  0*VS_CNT_BASE, /* maybe 12, 0 for no limit */		0, 0, 0
+};
+#else
 int box_leve_max_vs[QUADRUPLE_BOX_LEVEL_CNT]=
 {
   1*VS_CNT_BASE,					0, 0, 6,  /* no limit */
@@ -20,6 +31,7 @@ int box_leve_max_vs[QUADRUPLE_BOX_LEVEL_CNT]=
   8*VS_CNT_BASE,					16, 0, 16,
   0*VS_CNT_BASE, /* maybe 12, 0 for no limit */		0, 0, 0
 };
+#endif
 
 int lbox_is_full(struct ltsys *lts, int lblevel)
 {
@@ -37,7 +49,7 @@ inline int lbox_is_empty(struct ltsys *lts, int lblevel)
   return plb->vs_cnt == 0;
 }
 
-int move_to_lbox(struct ltsys *lts, int newlevel, struct vs_item *pvi, int *pug_cnt, int ugc_original)
+int move_to_lbox(struct ltsys *lts, int newlevel, struct vs_item *pvi, int *pug_cnt, int ugc_original, int *pnewlbox_fulled)
 {
   int ret = 0;
 
@@ -47,7 +59,7 @@ int move_to_lbox(struct ltsys *lts, int newlevel, struct vs_item *pvi, int *pug_
   lts->lt_boxes[oldlevel].fi_linernr = lts->lt_boxes[oldlevel].ltbm->first_inode_linenr = tmppvi->vs_linenr;
   list_del(&pvi->inode);
   lts->lt_boxes[oldlevel].vs_cnt = --(lts->lt_boxes[oldlevel].ltbm->vs_cnt);
-#if 0
+#if 1
   if (lts->lt_boxes[oldlevel].vs_busy_cnt != 0)
   {
     lts->lt_boxes[oldlevel].vs_cnt = ++(lts->lt_boxes[oldlevel].ltbm->vs_cnt);
@@ -65,7 +77,7 @@ int move_to_lbox(struct ltsys *lts, int newlevel, struct vs_item *pvi, int *pug_
   }
   lts->vsm_item[pvi->vs_linenr].next_inode_linenr = NO_MORE_VIS;
   list_add_tail(&pvi->inode, &(lts->lt_boxes[newlevel].i_list));
-#if 0
+#if 1
   if (lbox_is_full(lts, newlevel)) {
     lts->lt_boxes[newlevel].vs_busy_cnt = ++(lts->lt_boxes[newlevel].ltbm->vs_busy_cnt);
   } else 
@@ -75,10 +87,21 @@ int move_to_lbox(struct ltsys *lts, int newlevel, struct vs_item *pvi, int *pug_
 
   msync(lts->meta_map, DEF_META_FILE_SIZE+1, MS_SYNC);
 
-#if 0
+#if 1
+  // first, we account for this VS's count
+  if (lbox_is_full(lts, newlevel))
+  {
+    ret += 1;
+    *pug_cnt -= 1;
+    *pnewlbox_fulled = 1;
+  }
   // we must make new way in the new lbox if it's full
   while (lbox_is_full(lts, newlevel))
-    ret = go_lbox(lts, newlevel, GO_LBTYPE_MAKEWAY, pug_cnt, ugc_original);
+  {
+    ret += go_lbox(lts, newlevel, GO_LBTYPE_MAKEWAY, pug_cnt, ugc_original);
+    // if lbox is full, then we break after addint it to the tail
+    if (newlevel == 0) break;
+  }
 #endif
 
   return ret;
@@ -147,37 +170,41 @@ int go_lbox_internal(struct ltsys *lts, int lblevel, int maxcnt_2go, int *pug_cn
 	}
       }
     }
-    //if(sigtermed == 1) break; // user pressed ctrl^c to terminate this go-session
+
+    int newlbox_fulled = 0; //flag to indicate the new lbox's fullness in move_to_lbox() function
     switch (wrong_pos) 
     {
       case 1:
 	printf("    ** Wrong at 1st try, put this VS into level 1 lb absolutely.\n");
-	//cnt2go -= move_to_lbox(lts, 0, pvi, pug_cnt, ugc_original);
-	move_to_lbox(lts, 0, pvi, pug_cnt, ugc_original);
+	cnt2go -= move_to_lbox(lts, 0, pvi, pug_cnt, ugc_original, &newlbox_fulled);
+	//move_to_lbox(lts, 0, pvi, pug_cnt, ugc_original);
 	break;
       case 2:
 	printf("    ** Wrong at 2nd try, maybe you need some more tries, so we put this VS into level 1 lb.\n");
-	//cnt2go -= move_to_lbox(lts, 0, pvi, pug_cnt, ugc_original);
-	move_to_lbox(lts, 0, pvi, pug_cnt, ugc_original);
+	cnt2go -= move_to_lbox(lts, 0, pvi, pug_cnt, ugc_original, &newlbox_fulled);
+	//move_to_lbox(lts, 0, pvi, pug_cnt, ugc_original);
 	break;
       case 3:
 	printf("    ** Wrong at 3rd try, you must use your mind to overcome it.\n");
-	//cnt2go -= move_to_lbox(lts, lblevel+1, pvi, pug_cnt, ugc_original);
-	move_to_lbox(lts, lblevel+1, pvi, pug_cnt, ugc_original);
+	cnt2go -= move_to_lbox(lts, lblevel+1, pvi, pug_cnt, ugc_original, &newlbox_fulled);
+	//move_to_lbox(lts, lblevel+1, pvi, pug_cnt, ugc_original);
 	break;
       default:
 	printf("    ** Wonderful done, we put this VS into next level.\n");
-	//cnt2go -= move_to_lbox(lts, lblevel+1, pvi, pug_cnt, ugc_original);
-	move_to_lbox(lts, lblevel+1, pvi, pug_cnt, ugc_original);
+	cnt2go -= move_to_lbox(lts, lblevel+1, pvi, pug_cnt, ugc_original, &newlbox_fulled);
+	//move_to_lbox(lts, lblevel+1, pvi, pug_cnt, ugc_original);
 	break;
     }
 
-    cnt2go--;
+    if (newlbox_fulled == 0) // if we have not accounted this VS in move_to_lbox()
+    {
+      cnt2go--;
 
-    // if *pug_cnt == 0 initially, let it go, do sub
-    // but if it is subbed into zero, we do break
-    if (--(*pug_cnt) == 0)
-      break;
+      // if *pug_cnt == 0 initially, let it go, do sub
+      // but if it is subbed into zero, we do break
+      if (--(*pug_cnt) == 0)
+	break;
+    }
   }
   //printf("\n");
 
@@ -262,7 +289,7 @@ void ltsys_meta_init(struct ltsys *lts, struct vs_index_head *pidxh)
   lts->meta_map = mmap(NULL, DEF_META_FILE_SIZE+1, PROT_READ|PROT_WRITE, MAP_SHARED, lts->meta_fd, 0);
   if (lts->meta_map == MAP_FAILED) ERROR("mmap");
   lts->vsm_head = (struct vs_meta_head *)lts->meta_map;	// maybe offset
-  lts->vsm_item = (struct vs_meta_item *)((lts->vsm_head)++);	
+  lts->vsm_item = (struct vs_meta_item *)((lts->vsm_head)+1);	
   lts->vsm_head->vs_total = pidxh->total_vs;
 
   for (i=0; i<BOX_LEVEL_CNT; i++)

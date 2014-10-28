@@ -217,16 +217,23 @@ int cmd_lsbox(struct ltsys *lts, int iargc, char **iargv, void *priv)
   if ((iargc != 2) || (strlen(iargv[1]) != 1)) 
   { cmd_lsbox_help(); return 1;} 
 
+  int level = -1;
   char c=iargv[1][0], all=0;
   struct list_head *vslh=NULL;
   if ((c>='0') && (c<=('0'+BOX_LEVEL_CNT-2)))
+  {
     vslh = &lts->lt_boxes[c-'0'].i_list;
+    level = c-'0';
+  }
   else if ((c=='a') || (c=='A'))
   {
     all=1;
   }
   else if ((c=='o') || (c=='O'))
+  {
     vslh = &lts->lt_boxes[BOX_LEVEL_CNT-1].i_list;
+    level = BOX_LEVEL_CNT-1;
+  }
   else 
   {
     cmd_lsbox_help();	// won't go here
@@ -246,10 +253,17 @@ int cmd_lsbox(struct ltsys *lts, int iargc, char **iargv, void *priv)
     }
   }
   else
+  {
+    struct lt_box *plb = &(lts->lt_boxes[level]);
+    printf("  level: %d\tfi_line: %d\t[%d|%d|%d] \n", plb->level, plb->fi_linernr,
+			plb->vs_cnt, plb->vs_busy_cnt, plb->vs_limit);
+    int cnt=0;
     list_for_each_entry(pi, vslh, inode)
     {
+      if (cnt++ == plb->vs_cnt) printf("  ----\n");
       printf((strlen(pi->vbuf)>=8)?LPVS_1:LPVS_2, pi->vs_linenr, pi->pos, pi->vbuf, pi->sbuf);
     }
+  }
   printf("\n");
 
   return 1;
