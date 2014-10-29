@@ -10,6 +10,8 @@
 #include "ltsys.h"
 
 #define MIN_VIS_IN_LBOX0_TO_RELOAD	VS_CNT_BASE
+#define VOC_PLACE_IN_SENT_1	"\033[4m"
+#define VOC_PLACE_IN_SENT_2	"\033[0m"
 
 #if TEST_FULL_MOVE
 int box_leve_max_vs[QUADRUPLE_BOX_LEVEL_CNT]=
@@ -265,6 +267,59 @@ int go_lbox(struct ltsys *lts, int lblevel, int go_lbox_type, int *puser_gave_cn
   return gl_ret;
 }
 
+
+char *replace_str2(const char *str, const char *old, const char *new)
+{
+  char *ret, *r;
+  const char *p, *q;
+  size_t oldlen = strlen(old);
+  size_t count, retlen, newlen = strlen(new);
+  int samesize = (oldlen == newlen);
+
+  if (!samesize) {
+    for (count = 0, p = str; (q = strstr(p, old)) != NULL; p = q + oldlen)
+      count++;
+    /* This is undefined if p-str > PTRDIFF_MAX */
+    retlen = p - str + strlen(p) + count * (newlen - oldlen);
+  } else
+    retlen = strlen(str);
+
+  if ((ret = malloc(retlen + 1)) == NULL)
+    return NULL;
+
+  r = ret, p = str;
+  while (1) {
+    /* if the old and new strings are different lengths - in other
+     * words we have already iterated through with strstr above,
+     * and thus we know how many times we need to call it - then we
+     * can avoid the final (potentially lengthy call to strstr,
+     * which we already know is going to return NULL, by
+     * decrementing and checking count.
+     */
+    if (!samesize && !count--)
+      break;
+    /* otherwise i.e. when the old and new strings are the same
+     * length, and we don't know how many times to call strstr, 
+     * we must check for a NULL return here (we check it in any
+     * event, to avoid further conditions, and because there's 
+     * no harm done with the check even when the old and new
+     * strings are different lengths).
+     */
+    if ((q = strstr(p, old)) == NULL)
+      break;
+    /* This is undefined if q-p > PTRDIFF_MAX */
+    int l = q - p;
+    memcpy(r, p, l);
+    r += l;
+    memcpy(r, new, newlen);
+    r += newlen;
+    p = q + oldlen;
+  }
+  strcpy(r, p);
+
+  return ret;
+}
+
 void vs_get_newline(char *buf, char *pstart)
 {
   while ((*buf++ = *pstart++) != '\n') ;
@@ -365,7 +420,8 @@ void ltsys_init(struct ltsys *lts, char *bfname)
     memset(aLine, 0, sizeof(aLine));
     vs_get_newline(aLine, vs_pt+pi->pos);
 
-    char *tmp=NULL, *tmp2=NULL;;
+    int i=0;
+    char *tmp=NULL, *tmp2=NULL, undline[30]={0};
     if ((tmp=strchr(aLine, '=')) != NULL)
     {
       pitem = malloc(sizeof(struct vs_item));
@@ -381,9 +437,15 @@ void ltsys_init(struct ltsys *lts, char *bfname)
 	memset(pitem->comm, 0, strlen(tmp2+1)+1);
 	strcpy(pitem->comm, tmp2+1);
       } 
-      pitem->sbuf = malloc(strlen(tmp+1)+1);
+
+      strcpy(undline, VOC_PLACE_IN_SENT_1);
+      while (i++ < strlen(pitem->vbuf))
+	strcat(undline, " ");
+      strcat(undline, VOC_PLACE_IN_SENT_2);
+      pitem->sbuf = replace_str2(tmp+1, pitem->vbuf, undline);
+      //pitem->sbuf = malloc(strlen(tmp+1)+1);
       if (pitem->sbuf == NULL) goto Err2;
-      strcpy(pitem->sbuf, tmp+1);
+      //strcpy(pitem->sbuf, tmp+1);
 
       pitem->vs_linenr = pi->vs_linenr;
       pitem->pos = pi->pos;

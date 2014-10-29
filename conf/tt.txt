@@ -1,25 +1,25 @@
 #Personal#comment1=personnel,staff#comment2
-peacock=A ____ can fly only a short distance. # one kind of birds
-resort=People often ____ to beach in hot wheather.
+peacock=A peacock can fly only a short distance. # one kind of birds
+resort=People often resort to beach in hot wheather.
 #here is some number
 #here is some number
-one=1#first
-two=2
+one=1#first with one
+two=2two is two
 ##hundred??
 ##hundred??
 ##hundred??
-thousand=1000
-three=3
-four=4
-five=5
-six=6
-seven=7
-eight=8
-nine=9
-ten=10
-eleven=11
-twelve=12
-thirteen=13
-fourteen=14
-fifteen=15
+#thousand=1000
+#three=3
+#four=4
+#five=5
+#six=6
+#seven=7
+#eight=8
+#nine=9
+#ten=10
+#eleven=11
+#twelve=12
+#thirteen=13
+#fourteen=14
+#fifteen=15
 
