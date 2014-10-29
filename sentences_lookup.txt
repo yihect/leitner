@@ -1,0 +1,12 @@
+
+查找例句
+可用词典（chrome); 用待查单词，比方 break 代替 url 中最后的 %s, 即可。
+
+初级: 
+http://dictionary.cambridge.org/search/american-english/direct/?source=gadgets&q=%s
+
+
+
+中级:
+http://dictionary.cambridge.org/search/american-english/direct/?source=gadgets&q=%s
+
