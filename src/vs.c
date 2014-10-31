@@ -421,7 +421,7 @@ void ltsys_init(struct ltsys *lts, char *bfname)
     vs_get_newline(aLine, vs_pt+pi->pos);
 
     int i=0;
-    char *tmp=NULL, *tmp2=NULL, undline[30]={0};
+    char *tmp=NULL, *tmp2=NULL;
     if ((tmp=strchr(aLine, '=')) != NULL)
     {
       pitem = malloc(sizeof(struct vs_item));
@@ -432,12 +432,16 @@ void ltsys_init(struct ltsys *lts, char *bfname)
       if ((tmp2=strchr(tmp+1, '#')) != NULL)
       {
 	*tmp2 = '\0';
+	char *tmp5 = strchr(tmp2+1, '&');	// G1,G2,..,IV,IP etc
+	if (tmp5 != NULL)
+	  *tmp5 = '\0';
 	pitem->comm = malloc(strlen(tmp2+1)+1);
 	if (pitem->comm == NULL) goto Err1;
 	memset(pitem->comm, 0, strlen(tmp2+1)+1);
 	strcpy(pitem->comm, tmp2+1);
       } 
 
+      char undline[30]={0};
       strcpy(undline, VOC_PLACE_IN_SENT_1);
       while (i++ < strlen(pitem->vbuf))
 	strcat(undline, " ");

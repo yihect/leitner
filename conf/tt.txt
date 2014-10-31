@@ -5,6 +5,7 @@ resort=People often resort to beach in hot wheather.
 #here is some number
 one=1#first with one
 two=2two is two
+二=一二三四
 ##hundred??
 ##hundred??
 ##hundred??
