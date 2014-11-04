@@ -1,0 +1,26 @@
+are=These books are $12.99 each.
+was to have=I was to have seen him last Wednesday, but he didn't come.#过去本计划/本打算做某事，但是现在却没做成
+be=Please be patient.
+is to=The president is to decide this issue very soon.#used to say what will happen.
+are not to=In future you are not to do that again.
+was=The food was on the table.#to show the position of a person or thing in space or time.
+were to=We were to have told you, but you were not in.
+is=Tony is in trouble again.#to show the position of a person or thing in space or time.
+was=There was no sound.#to exist
+am to=I must continue to learn if I am to make further progress.
+am=I think, so I am.#to exist
+was to have been=Money that was to have been sent on buying a new house has been taken back to fix up the old one.
+be=To be or not to be, that's a question.
+were to=If we were to be there in time, we'll have to hurry up.
+is for=This dictionary is for you.
+'s nothing=I used to love her but she's nothing to me any more.
+was not to=I told him he was not to make that mistake again.
+be=If I were afraid of you, why would I be here? #&G1
+be=If you were allowed to have one wish, what would it be?#&G1
+was=I felt nervous because I was soon to leave home for the first time.#过去计划做什么事，且现在看已经实现了
+were to have been=We were to have been married last year.#过去本计划/本打算做某事，但是现在却没做成
+were to=The products we were to design included different models of motors.
+is to=The letter is to be handed to him in person.
+#G1,subjunice=
+
+

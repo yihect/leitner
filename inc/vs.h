@@ -3,7 +3,7 @@
 
 #include "list.h"
 
-#define VBUF_LEN 15
+#define VBUF_LEN 30
 #define BOX_LEVEL_CNT 6		// leitner sys box levels
 #define DOUBLE_BOX_LEVEL_CNT	BOX_LEVEL_CNT*2
 #define TRIPLE_BOX_LEVEL_CNT	BOX_LEVEL_CNT*3 
