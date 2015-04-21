@@ -1,0 +1,37 @@
+
+vs file content format
+-------------------------
+
+
+1, Global format
+
+#comment...
+#comment...
+were to=If we were to be there in time, we'll have to hurry up. ^V1are,V2hurry,...:G1,G2$ #other comment
+#comment...
+#comment...
+be=If you were allowed to have one wish, what would it be? ^&G1$ #hehe Other comment
+#comment...
+
+#vocabularies
+depend@If you say that one thing depends on another... second.  ^verb:R1depend,R2pend:G1,G2:F1$
+dependent@To be dependent on something or someone means to ... to survive. ^adj:R1depend,R2pend:G1,G2$
+dependable@If you say that someone or something is dependable, you ... them to do. ^adj:R1depend,R2pend:G1,G2:F1$
+
+
+#grammer & usage
+G1%brief_description+detail_desc
+
+#root and suffix/prefix
+R2*brief+detail
+F1*brief+detail
+
+
+2, explation
+	2.1 注释为 # 打头，只能放在行首或者内容的末尾
+	2.2 内部记录序号为相对次序, (不可改变，意味着不能在中间插入删除，只能在后面追加)
+  	2.3 句子相关
+		^V1are,V2hurry,...:G1,G2$ 
+		V1 为主词; V2 为其他词
+
+
