@@ -27,6 +27,7 @@ app			:= $(BIN_PATH)/ltsys
 #			utest/CuTest.c \
 #	utest/memman_tests.c 
 sources := 	src/ltsys.c \
+  		src/rbtree.c \
 		src/vs.c \
 		src/main.c
 

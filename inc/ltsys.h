@@ -30,6 +30,7 @@ struct ltsys
   unsigned int num_per_load;	// load num item every time
   //struct list_head vsi_list;					// vs item list(maybe hashed, for random usage)
   struct vs_item **itblk;	// item ptr array
+  struct rfvg_all_struct rfvg;	// rfvg (to fix: move vs_item etc into this)
 };
 
 extern int sigtermed;
