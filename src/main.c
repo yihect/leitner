@@ -8,7 +8,7 @@
 #include <string.h>
 #include "ltsys.h"
 
-#define ENABLE_RUN_TEST	0
+#define ENABLE_RUN_TEST	1
 #if ENABLE_RUN_TEST
 void RunAllTests(void);
 #endif

@@ -122,6 +122,12 @@ struct glue_wrapper
   } gn;
 };
 
+/* glue wrapper/node logic */
+unsigned bbits(unsigned n);
+void set_offset(unsigned *gn_bitmap, unsigned gn_type, unsigned offset);
+unsigned get_offset(unsigned gn_bitmap, unsigned gn_type);
+
+
 struct type_struct
 {
   unsigned int type_item_cnt; 	// total item cnt

@@ -26,9 +26,13 @@ app			:= $(BIN_PATH)/ltsys
 #sources := 	utest/AllTests.c \
 #			utest/CuTest.c \
 #	utest/memman_tests.c 
-sources := 	src/ltsys.c \
+sources := 	utest/AllTests.c \
+  		utest/CuTest.c \
+		utest/glue_tests.c \
+	 	src/ltsys.c \
   		src/rbtree.c \
 		src/vs.c \
+		src/glue.c \
 		src/main.c
 
 ################################################
