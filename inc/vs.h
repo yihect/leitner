@@ -1,8 +1,13 @@
 #ifndef _VS_H_
 #define _VS_H_
 
+#include <assert.h>
 #include "list.h"
 #include "rbtree.h"
+
+#ifndef BUG_ON  
+#define BUG_ON(cond) assert(!(cond))
+#endif
 
 #define VBUF_LEN 30
 #define BOX_LEVEL_CNT 6		// leitner sys box levels
@@ -115,17 +120,80 @@ struct glue_wrapper
   } u;
   struct glue_node
   {
-    unsigned long *pglue_bm;	// glue bitmap which be used 
+    unsigned int gbm[2];	// glue bitmap which be used 
     				// to explain the usage of ptrs in following
-    				// block.
+    				// lh block. gbm[1] may be used as back ptr.
     struct list_head lhb[0];	// lh array block 
   } gn;
 };
 
 /* glue wrapper/node logic */
-unsigned bbits(unsigned n);
+#define GBM_LH_NODE_TYPE_SIZE		4
+#define GBM_LH_NODE_TYPE_SHIFT		28
+#define GBM_LH_NODE_TYPE_MASK		((1<<GBM_LH_NODE_TYPE_SIZE-1) << GBM_LH_NODE_TYPE_SHIFT)
+#define GBM_FORMAT_TYPE_MASK		0x08000000
+#define GBM_FT0_OFFSET_SIZE		15
+#define GBM_FT0_VALIDBITS_SIZE		9
+#define GBM_FT0_VALIDBITS_SHIFT		(GBM_FT0_OFFSET_SIZE + 3)
+#define GBM_FT0_VALIDBITS_MASK		((1<<GBM_FT0_VALIDBITS_SIZE-1) << GBM_FT0_VALIDBITS_SHIFT)
+#define GBM_FT1_1ST_OFFSET_SIZE		10
+#define GBM_FT1_1ST_LH_ITEMS		3
+#define GBM_FT1_2ND_OFFSET_SIZE		30
+#define GBM_FT1_2ND_LH_ITEMS		14
+#define GBM_FT1_VALIDBITS_SIZE		(GBM_FT1_1ST_LH_ITEMS + GBM_FT1_2ND_LH_ITEMS)
+#define GBM_FT1_VALIDBITS_SHIFT		GBM_FT1_1ST_OFFSET_SIZE
+#define GBM_FT1_VALIDBITS_MASK		((1<<(GBM_FT1_VALIDBITS_SIZE-1)) << GBM_FT1_VALIDBITS_SHIFT)
+
+struct glue_info_entry {
+  unsigned char head_nr;
+  unsigned char node_nr;
+  unsigned char gl_type; 	// lhead-1ton, lhead-mton, lnode, lnode_backpt
+  char desc[59];
+};
+
+#define GIE_TABLE_SIZE 	GBM_FT1_VALIDBITS_SIZE	// bigger of type 0 and type 1
+struct glue_info {
+  struct glue_info_entry gie_tbl[GIE_TABLE_SIZE];
+  unsigned char gbm_ftype;	// gbm format type
+};
+
+/* glue lh node type about */
+enum { GLT_UW_PHONSYM, GLT_MW_PHONSYM, GLT_TW_PHONSYM, GLT_UW_PHON, GLT_MW_PHON,
+  GLT_TW_PHON, GLT_UW_RFIX, GLT_MW_RFIX, GLT_TW_RFIX, GLT_UW_VOCA, GLT_MW_VOCA,
+  GLT_TW_VOCA, GLT_UW_GRAM, GLT_MW_GRAM, GLT_TW_GRAM, GLT_SENTENCE, GLT_MAX };
+
+/* glue lh node offset options for every kinds of glue lh_node type */
+enum { GLOF_UW_PHONSYM_TODO };
+enum { GLOF_MW_PHONSYM_TODO };
+enum { GLOF_TW_PHONSYM_TODO };
+enum { GLOF_UW_PHON_TODO };
+enum { GLOF_MW_PHON_TODO };
+enum { GLOF_TW_PHON_TODO };
+
+enum { GLOF_MW_RFIX_TYPE_LHEAD };	// for rf uw
+enum { GLOF_MW_RFIX_TYPE_LNODE, GLOF_TW_RFIX_USAGE_LHEAD, GLOF_MW_RFIX_INSTANCE_LHEAD/*B1*/ };
+enum { GLOF_TW_RFIX_USAGE_LNODE, GLOF_MW_RFIX_USAGE_INSTANCE_LHEAD/*C1*/ };
+
+enum { GLOF_MW_VOCA_TYPEWORDS_LHEAD/*A1*/, GLOF_TW_VOCA_TYPEUSAGE_LHEAD };
+enum { GLOF_MW_VOCA_BASEWORDS_LNODE,  GLOF_UW_VOCA_TYPE_LHEAD/*A2*/, GLOF_SW_VOCA_EXAMPLEV_LHEAD/*E1*/,
+	GLOF_MW_VOCA_BASEWORDS_LHEAD, GLOF_TW_VOCA_MEANINGUSAGE_LHEAD, GLOF_MW_VOCA_RTINCLUDED_LHEAD/*B2*/,
+	GLOF_TW_VOCA_WORDSALLG_LHEAD/*D1*/, GLOF_TW_VOCA_USAGE_INCLUDED_LHEAD/*C2*/ }; 
+enum { GLOF_TW_VOCA_MEANINGUSAGE_LNODE, GLOF_TW_VOCA_TYPEUSAGE_LNODE, GLOF_TW_VOCA_DUMMY1, GLOF_SW_VOCA_EXAMPLEVUSAGE_LHEAD/*F1*/ };
+
+enum { GLOF_MW_GRAM_GTYPE_LHEAD };
+enum { GLOF_MW_GRAM_GTYPE_LNODE, GLOF_TW_GRAM_GUSAGE_LHEAD, GLOF_SW_GRAM_EXAMPLEG_LHEAD/*G1*/ };
+enum { GLOF_TW_GRAM_GUSAGE_LNODE, GLOF_MW_GRAM_VWORDS_LHEAD/*D2*/, GLOF_SW_GRAM_EXAMPLEUSAGE_LHEAD/*H1*/ };
+
+enum { GLOF_MW_SENT_VUSED_LHEAD/*E2*/, GLOF_TW_SENT_VUSEDUSAGE_LHEAD/*F2*/, 
+	GLOF_MW_SENT_GUSED_LHEAD/*G2*/, GLOF_TW_SENT_GUSEDUSAGE_LHEAD/*H2*/ };
+
+enum { GLT_LHEAD_1TON, GLT_LHEAD_MTON, GLT_LNODE, GLT_LNODE_TOP_BACKPT, GLT_LNODE_BOTTOM_BACKPT, GLT_DUMMY };
+
+inline unsigned bbits(unsigned n) __attribute__((always_inline));
+inline unsigned is_offset_valid(unsigned *gn_bitmap, unsigned gn_type) __attribute__((always_inline));
+inline void mark_offset(unsigned *gn_bitmap, unsigned gn_type, unsigned validness) __attribute__((always_inline));
 void set_offset(unsigned *gn_bitmap, unsigned gn_type, unsigned offset);
-unsigned get_offset(unsigned gn_bitmap, unsigned gn_type);
+unsigned get_offset(unsigned *gn_bitmap, unsigned gn_type);
 
 
 struct type_struct

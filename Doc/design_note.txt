@@ -1,0 +1,77 @@
+
+
+ 1, glue_node arrangment:
+
+  root/fix:
+  	UW				MW				TW
+	1-r(MW_rtType_list)		1-l(UW_rtType_list_node)	1-l(MW_rtUsage_list_node)
+  					1-r(TW_rtUsage_list)		1-r(MW_rtUsage_Instance_list)-post
+					1-r(MW_rt_Instance_list)	* 1-l(TW_rtUsage_Included_list_node)-post
+  					* 1-l(MW_rt_Included_list_node)
+  					
+  
+  vocabulary:
+  	UW				MW				TW
+	1-r(MW_vType_wordslist)		* 1-l(UW_vType_wordslist_node)	1-l(MW_vMeaningUsage_list_node)
+  	1-r(TW_vTypeUsage_list)-post	1-r(TW_vMeaningUsage_list)	1-l(TW_vTypeUsage_list_node)-post
+	* 1-l(MW_vType_typelist_node)	1-r(MW_vType_typelist)		1-r(SW_sExample_forvUsage_list)-post
+  					* 1-l(MW_vUsed_list_node)		* 1-r(TW_vUsed_Usage_list_node)-post
+  					1-r(SW_sExample_forv_list)
+  					1-r(MW_vBaseType_wordslist)
+  					1-l(MW_vBaseType_wordslist_node)
+  					* 1-l(MW_rt_Instance_list_node)
+  					1-r(MW_rt_Included_list)
+					* 1-l(MW_vWords_list_node)
+  					1-r(TW_vWords_allg_list)
+  					* 1-l(MW_rtUsage_Instance_list_node)-post
+					1-l(TW_rtUsage_Included_list)-post
+  					
+
+
+  grammar:
+  	UW				MW				TW
+	1-r(MW_gtType_list)		1-l(MW_gType_list_node)		1-l(MW_gUsage_list_node)
+  					1-r(TW_gUsage_list)		1-r(MW_vWords_list)
+  					* 1-l(MW_gUsed_list_node)	* 1_l(TW_vWords_allg_list_node)
+					1-r(SW_sExample_forg_list)	1-r(SW_sExample_forgUsage_list)-post
+									* 1-r(TW_gUsed_Usage_list_node)-post
+  					
+
+  sentense:
+  	1-r(MW_vUsed_list)
+  	* 1-l(SW_sExample_forv_list_node)
+  	1-r(TW_vUsed_Usage_list)-post
+  	* 1-l(SW_sExample_forvUsage_list_node)-post
+  	1-r(MW_gUsed_list)
+  	* 1-l(SW_sExample_forg_list_node)
+  	1-r(TW_gUsed_Usage_list)-post
+  	* 1-l(SW_sExample_forgUsage_list_node)-post
+
+
+  m-n relationship :						Note:
+  	MW_vType_wordslist / MW_vType_typelist
+	MW_rt_Instance_list / MW_rt_Included_list		
+	MW_rtUsage_Instance_list / TW_rtUsage_Included_list	post extended
+	MW_vWords_list / TW_vWords_allg_list
+	MW_vUsed_list / SW_sExample_forv_list
+	TW_vUsed_Usage_list / SW_sExample_forvUsage_list	post extended
+	MW_gUsed_list / SW_sExample_forg_list
+	TW_gUsed_Usage_list / SW_sExample_forgUsage_list	post extended
+
+
+  1-n relationship (with back ptr) :				Note:
+    	MW_rtType_list_node
+	MW_rtUsage_list_node
+	MW_vMeaningUsage_list_node
+	MW_vBaseType_wordslist_node				conflicted with MW_vBaseType_wordslist
+	TW_vTypeUsage_list_node
+	MW_gType_list_node
+	MW_gUsage_list_node
+	
+
+    	
+  	
+  
+  	
+
+
