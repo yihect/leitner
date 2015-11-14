@@ -51,7 +51,7 @@ void test_set_get_offset(CuTest *tc)
   mark_offset(gbma, 16, true);
   CuAssertIntEquals(tc, 0x0c000000, gbma[0]);
   CuAssertTrue(tc, is_offset_valid(gbma, 16));
-  mark_offset(&gbma, 0, true);
+  mark_offset(gbma, 0, true);
   CuAssertIntEquals(tc, 0x0c000400, gbma[0]);
   CuAssertTrue(tc, is_offset_valid(gbma, 0));
   set_offset(gbma, 13, 13);

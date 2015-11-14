@@ -39,7 +39,7 @@ struct glue_info gi[GLT_MAX] =
 		  [GLOF_MW_RFIX_USAGE_INSTANCE_LHEAD] = {
 			  GLOF_MW_RFIX_USAGE_INSTANCE_LHEAD, GLOF_TW_VOCA_USAGE_INCLUDED_LHEAD, 
 			  GLT_LHEAD_MTON, 
-			  "All vocab examples of this usage instance of this Root or Fix:"
+			  "All vocab examples of this Roots/Fixes usage instance:"
 		  },
 	  },
   },
