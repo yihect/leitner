@@ -2,17 +2,9 @@
 #define _LTSYS_H_
 
 #include "vs.h"
+#include "util.h"
 
 #define DEFAULT_NUM_PER_LOAD	30
-#ifndef false
-#define false 0
-#endif
-#ifndef true
-#define true 1
-#endif
-
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
 
 #define ERROR(msg) \
   do { perror(msg); exit(EXIT_FAILURE); } while (0)
@@ -31,9 +23,20 @@ struct ltsys
   //struct list_head vsi_list;					// vs item list(maybe hashed, for random usage)
   struct vs_item **itblk;	// item ptr array
   struct rfvg_all_struct rfvg;	// rfvg (to fix: move vs_item etc into this)
+
+  // redirect about
+  int pipefd[2];		/* output pipe file descriptors */
+  FILE *stdpipe;                  /* standard pipe for output */
+  pid_t stdpipe_pid;		/* per-cmd standard output pipe's pid */
+  FILE *ofile;
+  FILE *pipe;
+  int pipe_pid, pipe_shell_pid;
+  char pipe_cmd[BUFSIZE];     /* pipe command line */
+  char my_tty[10];
 };
 
 extern int sigtermed;
+extern FILE	*fp;
 
 int cmd_clear(struct ltsys *lts, int iargc, char **iargv, void *priv);
 int cmd_init(struct ltsys *lts, int iargc, char **iargv, void *priv);
@@ -79,6 +82,13 @@ enum
   GO_LBTYPE_MAKEWAY,
 };
 
+enum
+{
+  STDPIPE_NONE,
+  STDPIPE_PARTIAL,
+  STDPIPE_ALL,
+};
+
 #define CmdMAXNum CMD_NULL
 
 typedef int (*CMD_PROCESSOR_FN)(struct ltsys *lts, int argc, char **argv, void *priv);
@@ -87,21 +97,22 @@ typedef struct tagTCOMMAND
 {
   char *CmdStr;	// command string
   char *CmdApr;
+  int stdpipe_type;
   CMD_PROCESSOR_FN cmdproc;
   CMD_USAGE_HELP_FN cmdusage;
 } TCOMMAND;
 
 static TCOMMAND Cmds[CmdMAXNum+1] =
 {
-  { "clear", "c", cmd_clear, cmd_clear_help},
-  { "init", "i", cmd_init, cmd_init_help},
-  { "load", "ld", cmd_load, cmd_load_help},
-  { "go", "g", cmd_go, cmd_go_help},
-  { "lsbox", "ls", cmd_lsbox, cmd_lsbox_help},
-  { "mkidx", "m", cmd_mkidx, cmd_mkidx_help},
-  { "help", "h", cmd_help, cmd_help_help},
-  { "exit",  "e", cmd_exit, cmd_exit_help},
-  { (char*)NULL, NULL, NULL  }
+  { "clear", "c", STDPIPE_NONE, cmd_clear, cmd_clear_help},
+  { "init", "i", STDPIPE_NONE, cmd_init, cmd_init_help},
+  { "load", "ld", STDPIPE_NONE, cmd_load, cmd_load_help},
+  { "go", "g", STDPIPE_NONE, cmd_go, cmd_go_help},
+  { "lsbox", "ls", STDPIPE_PARTIAL, cmd_lsbox, cmd_lsbox_help},
+  { "mkidx", "m", STDPIPE_NONE, cmd_mkidx, cmd_mkidx_help},
+  { "help", "h", STDPIPE_PARTIAL, cmd_help, cmd_help_help},
+  { "exit",  "e", STDPIPE_NONE, cmd_exit, cmd_exit_help},
+  { (char*)NULL, (char *)NULL, 0, NULL, NULL  }
 };	
 
 

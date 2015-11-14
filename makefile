@@ -33,6 +33,7 @@ sources := 	utest/AllTests.c \
   		src/rbtree.c \
 		src/vs.c \
 		src/glue.c \
+		src/util.c \
 		src/main.c
 
 ################################################
@@ -51,7 +52,7 @@ $(app): $(objects)
 		 
 
 clean:
-	$(RM)  $(BIN_PATH)/* $(objects) $(dependencies)
+	$(RM)  $(app) $(objects) $(dependencies)
 
 ################################################
 

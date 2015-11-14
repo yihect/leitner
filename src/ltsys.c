@@ -16,85 +16,85 @@
 
 void cmd_disp( void )
 {
-  printf("\n");
-  printf("  c[lear]\tclear the screen \n");
-  printf("  i[nit]\tinit vocabulary file etc. \n");
-  printf("  l[oa]d\tload more vocabs \n");
-  printf("  g[o]\t\tstart to mem \n");
-  printf("  ls[box]\tlist statistics of leitner sys box \n");
-  printf("  m[kidx]\tmake index file  for vs \n");
-  printf("  h[elp]\tshow cmd info \n");
-  printf("  e[xit]\tleave the program \n");
-  printf("\n");
+  fprintf(fp, "\n");
+  fprintf(fp, "  c[lear]\tclear the screen \n");
+  fprintf(fp, "  i[nit]\tinit vocabulary file etc. \n");
+  fprintf(fp, "  l[oa]d\tload more vocabs \n");
+  fprintf(fp, "  g[o]  \tstart to mem \n");
+  fprintf(fp, "  ls[box]\tlist statistics of leitner sys box \n");
+  fprintf(fp, "  m[kidx]\tmake index file  for vs \n");
+  fprintf(fp, "  h[elp]\tshow cmd info \n");
+  fprintf(fp, "  e[xit]\tleave the program \n");
+  fprintf(fp, "\n");
 }
 
 void cmd_clear_help()
 {
-  printf("\n");
-  printf("   usage: c[lear]  \n");
-  printf("\n");
-  printf("  Clear the screen.\n");
-  printf("\n");
+  fprintf(fp, "\n");
+  fprintf(fp, "   usage: c[lear]  \n");
+  fprintf(fp, "\n");
+  fprintf(fp, "  Clear the screen.\n");
+  fprintf(fp, "\n");
 }
 void cmd_init_help()
 {
-  printf("\n");
-  printf("   usage: i[nit] VS_file_basename \n");
-  printf("\n");
-  printf("  Initialize leitner sys using the VS file with basename.\n");
-  printf("\n");
+  fprintf(fp, "\n");
+  fprintf(fp, "   usage: i[nit] VS_file_basename \n");
+  fprintf(fp, "\n");
+  fprintf(fp, "  Initialize leitner sys using the VS file with basename.\n");
+  fprintf(fp, "\n");
 }
 void cmd_load_help()
 {
-  printf("\n");
-  printf("   usage: l[oa]d [num] \n");
-  printf("\n");
-  printf("  Load num VSes into level 0 box. Load 30 VSes defaultly.\n");
-  printf("\n");
+  fprintf(fp, "\n");
+  fprintf(fp, "   usage: l[oa]d [num] \n");
+  fprintf(fp, "\n");
+  fprintf(fp, "  Load num VSes into level 0 box. Load 30 VSes defaultly.\n");
+  fprintf(fp, "\n");
 }
 void cmd_go_help()
 {
-  printf("\n");
-  printf("   usage: g[o] [num] \n");
-  printf("\n");
-  printf("  Start a session to memorize. You can use ctrl_D to terminate this session.\n");
-  printf("   num\tthe number of VSes to memorize in this session.\n");
-  printf("\n");
+  fprintf(fp, "\n");
+  fprintf(fp, "   usage: g[o] [num] \n");
+  fprintf(fp, "\n");
+  fprintf(fp, "  Start a session to memorize. You can use ctrl_D to terminate this session.\n");
+  fprintf(fp, "   num\tthe number of VSes to memorize in this session.\n");
+  fprintf(fp, "\n");
 }
 void cmd_lsbox_help()
 {
-  printf("\n");
-  printf("   usage: ls[box] 0..4|o|a \n");
-  printf("\n");
-  printf("  List all VSes in one level-box or all.\n");
-  printf("   0..4\ta special level\n");
-  printf("   a\tall levels\n");
-  printf("   o\tthe over level\n");
-  printf("\n");
+  fprintf(fp, "\n");
+  fprintf(fp, "   usage: ls[box] 0..4|o|a \n");
+  fprintf(fp, "\n");
+  fprintf(fp, "  List all VSes in one level-box or all.\n");
+  fprintf(fp, "   0..4\ta special level\n");
+  fprintf(fp, "   a\tall levels\n");
+  fprintf(fp, "   o\tthe over level\n");
+  fprintf(fp, "\n");
 }
 void cmd_mkidx_help()
 {
-  printf("\n");
-  printf("   usage: m[kidx] VS_file_basename \n");
-  printf("\n");
-  printf("  Make index file for VS file with basename.\n");
-  printf("\n");
+  fprintf(fp, "\n");
+  fprintf(fp, "   usage: m[kidx] VS_file_basename \n");
+  fprintf(fp, "\n");
+  fprintf(fp, "  Make index file for VS file with basename.\n");
+  fprintf(fp, "\n");
 }
 void cmd_help_help()
 {
-  printf("\n");
-  printf("   usage: h[elp] [full_cmd|cmd_abbreviation] \n");
-  printf("\n");
-  printf("  List help information.\n");
-  printf("\n");
+  fprintf(fp, "\n");
+  fprintf(fp, "   usage: h[elp] [full_cmd|cmd_abbreviation] \n");
+  fprintf(fp, "\n");
+  fprintf(fp, "  List help information.\n");
+  fprintf(fp, "\n");
 }
 void cmd_exit_help()
 {
-  printf("\n");
-  printf("   usage: e[xit]  \n");
-  printf("\n");
-  printf("  Exit ltsys.\n");
-  printf("\n");
+  fprintf(fp, "\n");
+  fprintf(fp, "   usage: e[xit]  \n");
+  fprintf(fp, "\n");
+  fprintf(fp, "  Exit ltsys.\n");
+  fprintf(fp, "\n");
 }
 
 
@@ -196,7 +196,7 @@ int cmd_go(struct ltsys *lts, int iargc, char **iargv, void *priv)
 
   if (sigsetjmp(env_sig, 1) != 0)
   {
-    printf("\n");
+    fprintf(fp, "\n");
     sigaction(SIGTERM, &oact, NULL);
     return 1;
   }
@@ -204,8 +204,8 @@ int cmd_go(struct ltsys *lts, int iargc, char **iargv, void *priv)
   extern int firstwhile;
   firstwhile = 0;
   ret = go_lbox(lts, 0, GO_LBTYPE_PUSH, &cnt, cnt);
-  printf("We have goed %d VS items.\n", ret);
-  printf("\n");
+  fprintf(fp, "We have goed %d VS items.\n", ret);
+  fprintf(fp, "\n");
 
   sigaction(SIGTERM, &oact, NULL);
 
@@ -240,7 +240,7 @@ int cmd_lsbox(struct ltsys *lts, int iargc, char **iargv, void *priv)
     return 1;
   }
 
-  printf("\n");
+  fprintf(fp, "\n");
   struct vs_item *pi=NULL, **ppi=NULL;
   if (all == 1)
   {
@@ -248,23 +248,23 @@ int cmd_lsbox(struct ltsys *lts, int iargc, char **iargv, void *priv)
     while(ppi <= (lts->itblk+lts->vsm_head->vs_total-1))
     {
       pi = *ppi;
-      printf((strlen(pi->vbuf)>=8)?LPVS_1:LPVS_2, pi->vs_linenr, pi->pos, pi->vbuf, pi->sbuf);
+      fprintf(fp, (strlen(pi->vbuf)>=8)?LPVS_1:LPVS_2, pi->vs_linenr, pi->pos, pi->vbuf, pi->sbuf);
       ppi++;
     }
   }
   else
   {
     struct lt_box *plb = &(lts->lt_boxes[level]);
-    printf("  level: %d\tfi_line: %d\t[%d|%d|%d] \n", plb->level, plb->fi_linernr,
+    fprintf(fp, "  level: %d\tfi_line: %d\t[%d|%d|%d] \n", plb->level, plb->fi_linernr,
 			plb->vs_cnt, plb->vs_busy_cnt, plb->vs_limit);
     int cnt=0;
     list_for_each_entry(pi, vslh, inode)
     {
-      if (cnt++ == plb->vs_cnt) printf("  ----\n");
-      printf((strlen(pi->vbuf)>=8)?LPVS_1:LPVS_2, pi->vs_linenr, pi->pos, pi->vbuf, pi->sbuf);
+      if (cnt++ == plb->vs_cnt) fprintf(fp, "  ----\n");
+      fprintf(fp, (strlen(pi->vbuf)>=8)?LPVS_1:LPVS_2, pi->vs_linenr, pi->pos, pi->vbuf, pi->sbuf);
     }
   }
-  printf("\n");
+  fprintf(fp, "\n");
 
   return 1;
 }
@@ -279,7 +279,7 @@ int cmd_mkidx(struct ltsys *lts, int iargc, char **iargv, void *priv)
 
   if (!strcmp(lts->fb_name, (char *)iargv) && lts->meta_map)
   {
-    printf("Warning... You are making index of current vs.\n");
+    fprintf(fp, "Warning... You are making index of current vs.\n");
     return 0;
   }
 
@@ -366,7 +366,7 @@ int cmd_help(struct ltsys *lts, int iargc, char **iargv, void *priv)
 
 int cmd_exit(struct ltsys *lts, int iargc, char **iargv, void *priv)
 {
-  printf(" < ltsys exit.... Bye !!!!>\n");
+  fprintf(fp, " < ltsys exit.... Bye !!!!>\n");
   return 0;	
 }
 
