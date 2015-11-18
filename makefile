@@ -41,14 +41,14 @@ objects		:= $(subst .c,.o,$(sources))
 dependencies 	:= $(subst .c,.d,$(sources))
 include_dirs 	:= $(INC_PATH)
 
-CFLAGS += -I $(include_dirs) -lm -g
+CFLAGS += -I $(include_dirs) -lm -L/usr/lib/x86_64-linux-gnu/ -lreadline -lncurses -g
 
 ################################################
 .PHONY:	all $(app) 
 all: $(app) 
 
 $(app): $(objects) 
-	$(CC)  $(CFLAGS) $^ -o $@
+	$(CC)  $^ $(CFLAGS) -o $@
 		 
 
 clean:

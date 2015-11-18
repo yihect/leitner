@@ -37,6 +37,7 @@ int is_directory(char *file);
 int file_exists(char *file, struct stat *sp);
 
 int decimal(char *s, int count);
+char *dupstr(char *s);
 
 #endif
 

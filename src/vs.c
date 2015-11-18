@@ -442,10 +442,15 @@ void ltsys_init(struct ltsys *lts, char *bfname)
       } 
 
       char undline[30]={0};
+#if 0
       strcpy(undline, VOC_PLACE_IN_SENT_1);
       while (i++ < strlen(pitem->vbuf))
 	strcat(undline, " ");
       strcat(undline, VOC_PLACE_IN_SENT_2);
+#else
+      while (i++ < strlen(pitem->vbuf))
+	strcat(undline, "_");
+#endif
       pitem->sbuf = replace_str2(tmp+1, pitem->vbuf, undline);
       //pitem->sbuf = malloc(strlen(tmp+1)+1);
       if (pitem->sbuf == NULL) goto Err2;

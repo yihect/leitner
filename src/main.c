@@ -7,6 +7,8 @@
 #include <fcntl.h>
 #include <string.h>
 #include <dirent.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 #include "ltsys.h"
 
 #define ENABLE_RUN_TEST	1
@@ -46,7 +48,6 @@ void start_info( )
   printf("Leitner Sys for Vocabulary 0.3 \n");
   printf("Type \"help\" to get cmd list, and type \"help cmd\" for details on the cmd\n");
   printf("Type \"exit\" to leave if you want. \n");
-  printf("ltsys> ");
 }
 
 static void restore_sanity(struct ltsys *pls)
@@ -364,6 +365,78 @@ static int setup_redirect(char *cmdline, struct ltsys *pls, int cmd_idx)
   return REDIRECT_NOT_DONE;
 }
 
+/* Generator function for command completion.  STATE lets us know whether
+   to start from scratch; without any state (i.e. STATE == 0), then we
+   start at the top of the list. */
+char *command_generator (const char *text, int state)
+{
+  static int list_index, len;
+  char *name;
+
+  /* If this is a new word to complete, initialize now.  This includes
+     saving the length of TEXT for efficiency, and initializing the index
+     variable to 0. */
+  if (!state)
+    {
+      list_index = 0;
+      len = strlen (text);
+    }
+
+  /* Return the next name which partially matches from the command list. */
+  while (name = Cmds[list_index].CmdStr)
+    {
+      list_index++;
+
+      if (strncmp (name, text, len) == 0)
+        return (dupstr(name));
+    }
+
+  /* If no names matched, then return NULL. */
+  return ((char *)NULL);
+}
+
+/* Attempt to complete on the contents of TEXT.  START and END bound the
+   region of rl_line_buffer that contains the word to complete.  TEXT is
+   the word to complete.  We can use the entire contents of rl_line_buffer
+   in case we want to do some simple parsing.  Return the array of matches,
+   or NULL if there aren't any. */
+char **ltsys_completion(const char *text, int start, int end)
+{
+  char **matches;
+
+  matches = (char **)NULL;
+
+  /* If this word is at the start of the line, then it is a command
+     to complete.  Otherwise it is the name of a file in the current
+     directory. */
+  if (start == 0)
+    matches = rl_completion_matches(text, command_generator);
+
+  return (matches);
+}
+
+void cmdline_init(struct ltsys *pls)
+{
+  set_my_tty(pls);
+
+  rl_initialize();
+  rl_readline_name = "ltsys";
+  rl_attempted_completion_function = ltsys_completion;
+
+  /* we use vi mode in readline */
+  rl_editing_mode = 0;
+  rl_bind_key(CTRL('N'), rl_get_next_history);
+  rl_bind_key(CTRL('P'), rl_get_previous_history);
+  rl_bind_key_in_map(CTRL('P'), rl_get_previous_history,
+      vi_insertion_keymap);
+  rl_bind_key_in_map(CTRL('N'), rl_get_next_history,
+      vi_insertion_keymap);
+  rl_generic_bind(ISFUNC, "[A", (char *)rl_get_previous_history, 
+      vi_movement_keymap);
+  rl_generic_bind(ISFUNC, "[B", (char *)rl_get_next_history, 
+      vi_movement_keymap);
+}
+
 int parse_args(char *cmdline, char **av)
 {
   char *tok,i ;
@@ -399,7 +472,7 @@ int main(int argc, char *argv[])
 #endif /* ENABLE_RUN_TEST */
 
 
-  char keystring[256+1];
+  char keystring[256+1], *line, *s;
   char temp_cmdline[256+1];
   int i_argc = 0;
   char **i_argv;
@@ -453,7 +526,7 @@ int main(int argc, char *argv[])
   //init from vs&index&meta file
   ltsys_init(pls, bfname);
 
-  set_my_tty(pls);
+  cmdline_init(pls);
   start_info();
   i_argv = (char**)malloc(1000);
   memset( i_argv, 0, sizeof(i_argv) );	
@@ -461,18 +534,20 @@ int main(int argc, char *argv[])
   fp = stdout;
   while( 1 )
   {	
-    memset(keystring, 0, sizeof(keystring));
     memset((char *)i_argv, 0, sizeof(i_argv));
-    fgets(keystring, sizeof(keystring)-1, stdin );
+    line = readline("ltsys> ");
+    if (!line) break;
 
-    if( strlen(keystring) < 2 )	//	when only input a ENTER key
+    s = clean_line(line);
+    if( strlen(s) < 2 )	//	when only input a ENTER key
     {
-      fprintf(fp, "ltsys> ");
+      free(line);
       continue;		
     }
 
-    strcpy(temp_cmdline, keystring);
-    i_argc = parse_args(keystring, (char **)i_argv);
+    add_history(s);
+    strcpy(temp_cmdline, s);
+    i_argc = parse_args(s, (char **)i_argv);
     if(i_argc)
     {
       for(i=0; i<CmdMAXNum; i++)
@@ -491,15 +566,15 @@ int main(int argc, char *argv[])
       ret = setup_redirect(temp_cmdline, pls, i);
       if (ret == REDIRECT_SHELL_COMMAND)
       {
-	  fprintf(fp, "ltsys> ");
-	  continue;
+	free(line);
+	continue;
       }
     }
 
     if (i >= CMD_NULL)
     {
       cmd_disp();
-      fprintf(fp, "ltsys> ");
+      free(line);
       continue;
     }
 
@@ -507,7 +582,7 @@ int main(int argc, char *argv[])
       break;
 
     restore_sanity(pls);
-    fprintf(fp, "ltsys> ");
+    free(line);
 
     usleep(50);
   }

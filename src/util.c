@@ -1,4 +1,4 @@
-
+#include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
 #include <sys/select.h>
@@ -180,6 +180,14 @@ int file_exists(char *file, struct stat *sp)
 }
 
 
+char *dupstr(char *s)
+{
+  char *r;
+
+  r = malloc(strlen (s) + 1);
+  strcpy (r, s);
+  return (r);
+}
 
 
 
