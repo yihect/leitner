@@ -38,12 +38,16 @@ struct ltsys
 extern int sigtermed;
 extern FILE	*fp;
 
+void command_init();
+char *cmd_modify_n_generator(const char *text, int state);
+
 int cmd_clear(struct ltsys *lts, int iargc, char **iargv, void *priv);
 int cmd_init(struct ltsys *lts, int iargc, char **iargv, void *priv);
 int cmd_load(struct ltsys *lts, int iargc, char **iargv, void *priv);
 int cmd_go(struct ltsys *lts, int iargc, char **iargv, void *priv);
 int cmd_lsbox(struct ltsys *lts, int iargc, char **iargv, void *priv);
 int cmd_mkidx(struct ltsys *lts, int iargc, char **iargv, void *priv);
+int cmd_modify(struct ltsys *lts, int iargc, char **iargv, void *priv);
 int cmd_help(struct ltsys *lts, int iargc, char **iargv, void *priv);
 int cmd_exit(struct ltsys *lts, int iargc, char **iargv, void *priv);
 
@@ -53,6 +57,7 @@ void cmd_load_help();
 void cmd_go_help();
 void cmd_lsbox_help();
 void cmd_mkidx_help();
+void cmd_modify_help();
 void cmd_help_help();
 void cmd_exit_help();
 
@@ -70,6 +75,7 @@ enum
   CMD_GO,
   CMD_LSBOX,
   CMD_MKIDX,
+  CMD_MODIFY,
   CMD_HELP,
   CMD_EXIT,
   CMD_NULL,
@@ -110,6 +116,7 @@ static TCOMMAND Cmds[CmdMAXNum+1] =
   { "go", "g", STDPIPE_NONE, cmd_go, cmd_go_help},
   { "lsbox", "ls", STDPIPE_PARTIAL, cmd_lsbox, cmd_lsbox_help},
   { "mkidx", "m", STDPIPE_NONE, cmd_mkidx, cmd_mkidx_help},
+  { "modify", "mo", STDPIPE_NONE, cmd_modify, cmd_modify_help},
   { "help", "h", STDPIPE_PARTIAL, cmd_help, cmd_help_help},
   { "exit",  "e", STDPIPE_NONE, cmd_exit, cmd_exit_help},
   { (char*)NULL, (char *)NULL, 0, NULL, NULL  }

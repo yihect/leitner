@@ -147,7 +147,7 @@ struct glue_wrapper
 struct glue_info_entry {
   unsigned char head_nr;
   unsigned char node_nr;
-  unsigned char gl_type; 	// lhead-1ton, lhead-mton, lnode, lnode_backpt
+  unsigned char gli_type; 	// lhead-1ton, lhead-mton, lnode, lnode_backpt
   char desc[59];
 };
 
@@ -156,6 +156,11 @@ struct glue_info {
   struct glue_info_entry gie_tbl[GIE_TABLE_SIZE];
   unsigned char gbm_ftype;	// gbm format type
 };
+
+/* glue_type and ln_node_type 
+ * so, glue_lh_node_type = 3*glue_type + ln_node_type */
+enum {GL_T_PHONTRANS, GL_T_PHON, GL_T_RFIX, GL_T_VOCA, GL_T_GRAM, GL_T_SENTENCE, GL_T_MAX};
+enum {LN_T_ALL, LN_T_UW=LN_T_ALL, LN_T_MW, LN_T_TW, LN_T_MAX};
 
 /* glue lh node type about */
 enum { GLT_UW_PHONSYM, GLT_MW_PHONSYM, GLT_TW_PHONSYM, GLT_UW_PHON, GLT_MW_PHON,
@@ -187,7 +192,7 @@ enum { GLOF_TW_GRAM_GUSAGE_LNODE, GLOF_MW_GRAM_VWORDS_LHEAD/*D2*/, GLOF_SW_GRAM_
 enum { GLOF_MW_SENT_VUSED_LHEAD/*E2*/, GLOF_TW_SENT_VUSEDUSAGE_LHEAD/*F2*/, 
 	GLOF_MW_SENT_GUSED_LHEAD/*G2*/, GLOF_TW_SENT_GUSEDUSAGE_LHEAD/*H2*/ };
 
-enum { GLT_LHEAD_1TON, GLT_LHEAD_MTON, GLT_LNODE, GLT_LNODE_TOP_BACKPT, GLT_LNODE_BOTTOM_BACKPT, GLT_DUMMY };
+enum { GLIT_LHEAD_1TON, GLIT_LHEAD_MTON, GLIT_LNODE, GLIT_LNODE_TOP_BACKPT, GLIT_LNODE_BOTTOM_BACKPT, GLIT_DUMMY };
 
 inline unsigned bbits(unsigned n) __attribute__((always_inline));
 inline unsigned is_offset_valid(unsigned *gn_bitmap, unsigned gn_type) __attribute__((always_inline));

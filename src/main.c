@@ -137,7 +137,7 @@ static int setup_stdpipe(struct ltsys *pls)
  *  Run an escaped shell command, redirecting the output to
  *  the current output file.
  */
-int shell_command(char *cmd)
+int shell_command(char *cmd, char *res, int res_len)
 {
   FILE *pipe;
   char buf[BUFSIZE];
@@ -148,13 +148,21 @@ int shell_command(char *cmd)
     return REDIRECT_FAILURE;
   }
 
-  fprintf(fp, "\n");
+  if (fp!=0) fprintf(fp, "\n");
   memset(buf, ' ', 2);
+  if (res != NULL) memset(res, '\0', res_len);
   while (fgets(buf+2, BUFSIZE-2, pipe))
-    fputs(buf, fp);
+  {
+    if ((res!=NULL) && ((strlen(res)+strlen(buf+2))<res_len))
+      strcat(res, buf+2);
+    else
+      if (fp!=0) fputs(buf, fp);
+  }
   pclose(pipe);
-  fprintf(fp, "\n");
+  if (res!=NULL)
+    return strlen(res);
 
+  if (fp!=0) fprintf(fp, "\n");
   return REDIRECT_SHELL_COMMAND;
 }
 
@@ -308,7 +316,7 @@ static int setup_redirect(char *cmdline, struct ltsys *pls, int cmd_idx)
     if (!strlen(p))
       return REDIRECT_FAILURE;
     else
-      return shell_command(p);
+      return shell_command(p, NULL, 0);
   }
 
   while (*p) {
@@ -377,19 +385,19 @@ char *command_generator (const char *text, int state)
      saving the length of TEXT for efficiency, and initializing the index
      variable to 0. */
   if (!state)
-    {
-      list_index = 0;
-      len = strlen (text);
-    }
+  {
+    list_index = 0;
+    len = strlen (text);
+  }
 
   /* Return the next name which partially matches from the command list. */
   while (name = Cmds[list_index].CmdStr)
-    {
-      list_index++;
+  {
+    list_index++;
 
-      if (strncmp (name, text, len) == 0)
-        return (dupstr(name));
-    }
+    if (strncmp (name, text, len) == 0)
+      return (dupstr(name));
+  }
 
   /* If no names matched, then return NULL. */
   return ((char *)NULL);
@@ -402,7 +410,8 @@ char *command_generator (const char *text, int state)
    or NULL if there aren't any. */
 char **ltsys_completion(const char *text, int start, int end)
 {
-  char **matches;
+  char tmpbuf[1024];
+  char **matches, *i_argv[20];	// 20 is enough??
 
   matches = (char **)NULL;
 
@@ -410,7 +419,20 @@ char **ltsys_completion(const char *text, int start, int end)
      to complete.  Otherwise it is the name of a file in the current
      directory. */
   if (start == 0)
-    matches = rl_completion_matches(text, command_generator);
+    return rl_completion_matches(text, command_generator);
+
+  strncpy(tmpbuf, rl_line_buffer, sizeof(tmpbuf));
+  int i_argc = parse_args(tmpbuf, (char **)i_argv);
+  if ((i_argv[0][0]=='m') && (i_argv[0][1]=='o'))
+  {
+    if (i_argc>=2)
+      switch (i_argv[1][0]) {
+	//case 'n':
+	case 'w':
+	case 'c':
+	  return rl_completion_matches(text, cmd_modify_n_generator);
+      }
+  }
 
   return (matches);
 }
@@ -523,6 +545,7 @@ int main(int argc, char *argv[])
     return 1;
   } else close(i);
 
+  command_init();
   //init from vs&index&meta file
   ltsys_init(pls, bfname);
 
@@ -539,7 +562,7 @@ int main(int argc, char *argv[])
     if (!line) break;
 
     s = clean_line(line);
-    if( strlen(s) < 2 )	//	when only input a ENTER key
+    if( strlen(s) <= 0 )	//when only input a ENTER key
     {
       free(line);
       continue;		
