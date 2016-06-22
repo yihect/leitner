@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "CuTest.h"
 #include "glue_tests.h"
+#include "mempool_tests.h"
 
 
 void RunAllTests(void)
@@ -10,6 +11,7 @@ void RunAllTests(void)
 	CuSuite *suite = CuSuiteNew();
 
 	CuSuiteAddSuite(suite,glue_getsuite());
+	CuSuiteAddSuite(suite, mempool_getsuite());
 
 	CuSuiteRun(suite);
 	CuSuiteSummary(suite,output);

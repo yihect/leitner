@@ -29,10 +29,12 @@ app			:= $(BIN_PATH)/ltsys
 sources := 	utest/AllTests.c \
   		utest/CuTest.c \
 		utest/glue_tests.c \
+		utest/mempool_tests.c \
 	 	src/ltsys.c \
   		src/rbtree.c \
 		src/vs.c \
 		src/glue.c \
+		src/mempool.c \
 		src/util.c \
 		src/main.c
 
