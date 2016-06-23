@@ -216,7 +216,7 @@ struct type_struct
 
 /* In following type_ts[*].u: 
  * ALL -> u.twrapper_ptrblk (ptrblk to Terminal Wrapper) 
- * OTHER -> u.uw_list (list of UWriapper objects) */
+ * OTHER -> u.uw_list (list of UWrapper objects) */
 enum { RF_TS_ALL, RF_TS_ROOT, RF_TS_PREFIX, RF_TS_SUFFIX, RF_TS_MAX };
 enum { V_TS_ALL, V_TS_BASIC, V_TS_NOUN, V_TS_VERB, V_TS_ADJ, V_TS_ADV, \
   V_TS_PRON, V_TS_PREP, V_TS_CONJ, V_TS_DETE, V_TS_MAX };

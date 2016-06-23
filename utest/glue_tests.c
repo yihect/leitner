@@ -7,6 +7,7 @@ CuSuite* glue_getsuite()
   CuSuite *suite = CuSuiteNew();
   SUITE_ADD_TEST(suite, test_bbits);
   SUITE_ADD_TEST(suite, test_set_get_offset);
+  SUITE_ADD_TEST(suite, test_setoffset);
   return suite;
 }
  
@@ -68,4 +69,41 @@ void test_set_get_offset(CuTest *tc)
   CuAssertIntEquals(tc, 8, get_offset(gbma, 15));
 }
 
+void test_setoffset(CuTest *tc)
+{
+  unsigned gbm=0;
+
+  /* 0~1 */
+  set_offset(&gbm, 0, 0);
+  CuAssertIntEquals(tc, 0x40000, gbm);
+  set_offset(&gbm, 0, 1);
+  CuAssertIntEquals(tc, 0x40001, gbm);
+  set_offset(&gbm, 1, 0);
+  CuAssertIntEquals(tc, 0xc0001, gbm);
+  set_offset(&gbm, 1, 1);
+  CuAssertIntEquals(tc, 0xc0003, gbm);
+
+  /* 2~3 */
+  set_offset(&gbm, 2, 2);
+  CuAssertIntEquals(tc, 0x1c0003, gbm);
+  set_offset(&gbm, 2, 3);
+  CuAssertIntEquals(tc, 0x1c0007, gbm);
+  set_offset(&gbm, 3, 2);
+  CuAssertIntEquals(tc, 0x3c0007, gbm);
+  set_offset(&gbm, 3, 3);
+  CuAssertIntEquals(tc, 0x3c000f, gbm);
+
+  /* 4~7 */
+  set_offset(&gbm, 4, 4);
+  CuAssertIntEquals(tc, 0x7c000f, gbm);
+  set_offset(&gbm, 4, 5);
+  CuAssertIntEquals(tc, 0x7c001f, gbm);
+  set_offset(&gbm, 4, 6);
+  CuAssertIntEquals(tc, 0x7c002f, gbm);
+  set_offset(&gbm, 4, 7);
+  CuAssertIntEquals(tc, 0x7c003f, gbm);
+  //set_offset(&gbm, 4, 8); // fail assertion
+  //...
+
+}
 
