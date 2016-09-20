@@ -1,6 +1,8 @@
 #include "vs.h"
 
 /*
+ * Note A
+ * =======
  * Glue bitmap format in gl node:
  *
  * a, type 0, length of 4 Bytes
@@ -33,6 +35,12 @@
  * The 1st Byte encode 3 lh nodes, and the 2nd
  * Byte encode 14 ln nodes. 
  *
+ *
+ * Note B
+ * =======
+ * list head position rule in gl node:
+ * The list head position is restricted in [2^n, 2^(n+1)), 
+ * where n is Log2 of LnJ of list header type. See set_offset().
  *
  */
 
@@ -120,7 +128,11 @@ void _set_offset(unsigned *gn_bitmap, unsigned gn_type, unsigned start_type, uns
 
 void set_offset(unsigned *gn_bitmap, unsigned gn_type, unsigned offset)
 {
-  BUG_ON(offset<LnJ(gn_type) || offset>2*LnJ(gn_type));
+  if (gn_type <= 1)
+    BUG_ON(offset >= 2);
+  else
+    BUG_ON(offset<LnJ(gn_type) || offset>=2*LnJ(gn_type));
+
   if (*gn_bitmap & GBM_FORMAT_TYPE_MASK)
   {
     BUG_ON(gn_type >= GBM_FT1_VALIDBITS_SIZE);

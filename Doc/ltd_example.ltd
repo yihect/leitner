@@ -1,0 +1,73 @@
+
+
+#{
+  ENUM keywords {ENUM, RFX%, VOC%, VGRP%, GRAM%, VS%, ITEM%, RFREF, VREF, VGREF, GREF}
+  ENUM vut_str {_trv, _intrv, _cn, _un, ...}
+#}
+#{
+  RFX% -able {
+    ITEM% -able_adj: "";
+  }
+#}
+#{
+  VOC% give {
+    ITEM% give_trv1: "meaning usage 1";
+    ITEM% give_trv2.[gave,given]: \
+	"meaning usage 2";
+    ITEM% give_intrv: "usage as intrv";		
+  }
+  VGRP% give_up {
+    ITEM% VREF.[give_trv1, up_prep, ...]  \
+      give_up_meaning1: \
+      "meaning";
+  }
+#}
+#{
+  VOC% birth {
+    ITEM% birth_trv1: "meaning usage 1";
+    ITEM% birth_un: "meaning usage 2";
+  }
+  VGRP% give_birth_to {
+    ITEM% VREF.[give_trv1, to_prep, ...]  \
+      give_birth_to_meaning1: \
+      "meaning";
+  }
+#}
+#{
+  VOC% capability.capable {
+    RFREF.[root, -able, -lity];
+    ITEM% give_trv1: "meaning usage 1";
+    ITEM% give_trv2.[gave,given]: \
+	"meaning usage 2";
+    ITEM% give_intrv: "usage as intrv";		
+  }
+#}
+#{
+  VOC% woman {
+    ITEM% woman_cn.[women]: ""
+  }
+#}
+#{
+  GRAM% todo {
+    ITEM% todo_type1.[word1, word2, ...]: \
+      "desc info"
+  }
+#}
+#{
+  VS% {
+    ITEM% VGREF.[give_up]  \
+      VREF.[are_linkv, hurry_intrv, ...]  \
+      GREF.[todo_type1, gram2, ...]: \
+      "were to=If we were to be there in time, we'll have to hurry up."
+  }
+#}
+
+
+
+
+
+
+
+
+
+

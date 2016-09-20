@@ -64,7 +64,7 @@ if (exists $ENV{VISUAL}) {
 	@editor=split(' ', $ENV{VISUAL});
 }
 #my $ret=system(@editor, $tmp);
-my $ret=system("vim", $tmp);
+my $ret=system("vim", $tmp, $ARGV[0]);
 if ($ret != 0) {
 	die "@editor exited nonzero, aborting\n";
 }

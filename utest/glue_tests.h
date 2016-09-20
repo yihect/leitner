@@ -22,6 +22,7 @@ int node_num(struct mem_node *list);
 /* tests */
 void test_bbits(CuTest *tc);
 void test_set_get_offset(CuTest *tc);
+void test_setoffset(CuTest *tc);
 
 
 

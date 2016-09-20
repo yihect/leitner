@@ -1,0 +1,26 @@
+##{
+#  VOC% xxxroootyyy.aroootb {
+#    RFREF.[rooot, -yyy, xxx-];
+#    ITEM% xxxroootyyy_trv1: "meaning usage 1";
+#    ITEM% xxxroootyyy_trv2.[gave,given]: \
+#	"meaning usage 2";
+#    ITEM% xxxroootyyy_intrv: "usage as intrv";		
+#  }
+#  VGRP% xxxroootyyy_up {
+#    ITEM% VREF.[xxxroootyyy_trv1, up_prep, ...]  \
+#      xxxroootyyy_up_meaning1: \
+#      "meaning";
+#  }
+##}
+##{
+#  VS% {
+#    ITEM% VGREF.[give_up]  \
+#      VREF.[are_linkv, hurry_intrv, ...]  \
+#      GREF.[todo_type1, gram2, ...]: \
+#      "were to=If we were to be there in time, we'll have to hurry up."
+#  }
+##}
+#
+#
+
+
