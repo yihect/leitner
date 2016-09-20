@@ -1,6 +1,15 @@
 #ifndef __UTIL_H_
 #define __UTIL_H_
 
+#include <stdlib.h>
+#include <stddef.h>
+#include <string.h>
+#include <sys/select.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 #ifndef false
 #define false 0
 #endif
@@ -35,9 +44,12 @@ void stall(unsigned long microseconds);
 
 int is_directory(char *file);
 int file_exists(char *file, struct stat *sp);
+void *read_file(const char *fn, unsigned *_sz);
 
 int decimal(char *s, int count);
 char *dupstr(char *s);
 
 #endif
+
+
 

@@ -1,0 +1,25 @@
+
+# syntax of ltd file:
+#{
+  type_keyword [[name][.base]] {
+    [ref_keyword.'[ref1, ref2, ...']]
+
+    ITEM [ref_keyword.'[ref1, ref2, ...'] \]
+      [ref_keyword.'[ref1, ref2, ...'] \]
+      [...] name1[.'[misc1, misc2, ...']] : "verbose_info1"
+
+    ITEM [ref_keyword.'[ref1, ref2, ...'] \]
+      [ref_keyword.'[ref1, ref2, ...'] \]
+      [...] name2[.'[misc1, misc2, ...']] : \
+      "verbose_info2"
+  }
+#}
+
+
+misc info list: 
+	cn  -> misc1
+	v   -> misc1,misc2
+	adj -> misc1,misc2
+	adv -> misc1,misc2
+
+

@@ -1,0 +1,18 @@
+
+#{
+  VOC% xxxroootyyy.aroootb {
+    RFREF.[rooot, -yyy, xxx-];
+    ITEM% xxxroootyyy_trv1: "meaning usage 1";
+    ITEM% xxxroootyyy_trv2.[gave,given]: \
+	"meaning usage 2";
+    ITEM% xxxroootyyy_intrv: "usage as intrv";		
+  }
+  VGRP% xxxroootyyy_up {
+    ITEM% VREF.[xxxroootyyy_trv1, up_prep, ...]  \
+      xxxroootyyy_up_meaning1: \
+      "meaning";
+  }
+#}
+
+
+
