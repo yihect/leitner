@@ -10,7 +10,7 @@ void RunAllTests(void)
 	CuString *output = CuStringNew();
 	CuSuite *suite = CuSuiteNew();
 
-	CuSuiteAddSuite(suite,glue_getsuite());
+	CuSuiteAddSuite(suite, glue_getsuite());
 	CuSuiteAddSuite(suite, mempool_getsuite());
 
 	CuSuiteRun(suite);

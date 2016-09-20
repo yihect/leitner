@@ -1,6 +1,7 @@
 #ifndef _MEMPOOL_TESTS_
 #define _MEMPOOL_TESTS_
 
+#include <stdio.h>
 #include "CuTest.h"
 #include "vs.h"
 

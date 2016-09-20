@@ -29,7 +29,7 @@ void test_init_mempool(CuTest *tc)
 void test_alloc_mempool(CuTest *tc)
 {
   printf("test_alloc_mempool() testing...\n");
-  printf("sizeof(mem_chunk_t) is %d\n", sizeof(mem_chunk_t));
+  printf("sizeof(mem_chunk_t) is %d\n", (int)sizeof(mem_chunk_t));
   int s;
   mem_pool_t *p = (mem_pool_t *)init_mem_pool(1024, 120*1024*1024, 32);
 

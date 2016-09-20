@@ -559,11 +559,11 @@ void mem_pool_stats(void * pool)
 
       endptr = (char *)chunk + sizeof(mem_chunk_t) + Pool->handles[chunk->handle].size;
 
-      printf("[%08x - %08x] <%08x >%08x  %3d  %s  %7d\n",
-         chunk,
-         endptr,
-         chunk->prev,
-         chunk->next,
+      printf("[%08lux - %08lux] <%08lux >%08lux  %3d  %s  %7d\n",
+         (unsigned long)chunk,
+         (unsigned long)endptr,
+         (unsigned long)chunk->prev,
+         (unsigned long)chunk->next,
          chunk->handle,
          status,
          Pool->handles[chunk->handle].size);
@@ -571,11 +571,11 @@ void mem_pool_stats(void * pool)
       prev = chunk;
       chunk = chunk->next;
       if (chunk) {
-         if (endptr < chunk) {
-            printf("Error: %d orphaned bytes follows chunk\n", (char *)chunk - endptr);
+         if ((unsigned long)endptr < (unsigned long)chunk) {
+            printf("Error: %lu orphaned bytes follows chunk\n", (char *)chunk - endptr);
          }
-         if (endptr > chunk) {
-            printf("Error: chunk overlaps next chunk by %d bytes\n", endptr - (char *)chunk);
+         if ((unsigned long)endptr > (unsigned long)chunk) {
+            printf("Error: chunk overlaps next chunk by %lu bytes\n", endptr - (char *)chunk);
          }
          if (chunk->prev != prev) {
             printf("Error: handle %3d chunk->prev chain broken\n", chunk->handle);
@@ -584,6 +584,6 @@ void mem_pool_stats(void * pool)
       
    }
    if (Pool->last != prev) {
-      printf("Error: Pool->last %08x but prev is %08x\n", Pool->last, prev);
+      printf("Error: Pool->last %08lux but prev is %08lux\n", (unsigned long)Pool->last, (unsigned long)prev);
    }
 }
