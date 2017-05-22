@@ -3,16 +3,28 @@
   VOC% xxxroootyyy.aroootb {
     RFREF.[rooot, -yyy, xxx-];
     ITEM% xxxroootyyy_trv1: "meaning usage 1";
+    ITEM% xxxroootyyy_noun {
+      SITEM% 1: "1st meaning";
+      SITEM% 2: "2nd meaning";
+    }
     ITEM% xxxroootyyy_trv2.[gave,given]: \
-	"meaning usage 2";
+      "meaning usage 2";
     ITEM% xxxroootyyy_intrv: "usage as intrv";		
   }
   VGRP% xxxroootyyy_up {
-    ITEM% VREF.[xxxroootyyy_trv1, up_prep, ...]  \
+    ITEM% VREF.[xxxroootyyy_trv1, xxxroootyyy_noun2, up_prep, ...]  \
       xxxroootyyy_up_meaning1: \
       "meaning";
   }
 #}
 
+#{
+  VGRP% ddd {
+    ITEM% RFREF.[d, dd] \
+      ddd: \
+      "it's meaning.";
+    ITEM% : "the 2nd meaning";
+  }
+#}
 
 

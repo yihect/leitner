@@ -45,7 +45,7 @@ objects		:= $(subst .c,.o,$(sources))
 dependencies 	:= $(subst .c,.d,$(sources))
 include_dirs 	:= $(INC_PATH)
 
-CFLAGS += -I $(include_dirs) -lm -L/usr/lib/x86_64-linux-gnu/ -lreadline -lncurses -g
+CFLAGS += -std=gnu99 -I $(include_dirs) -lm -L/usr/lib/x86_64-linux-gnu/ -lreadline -lncurses -g
 
 ################################################
 .PHONY:	all $(app) 

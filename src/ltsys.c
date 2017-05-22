@@ -15,7 +15,11 @@
 #define LPVS_1	"  [%d|%d]\t%s\t%s\n"
 #define LPVS_2	"  [%d|%d]\t%s\t\t%s\n"
 
-void cmd_disp( void )
+/* defined in main.c */
+int shell_command(char *cmd, char *res, int res_len);
+int parse_args(char *cmdline, char **av);
+
+void cmd_disp()
 {
   fprintf(fp, "\n");
   fprintf(fp, "  c[lear]\tclear the screen \n");
@@ -133,6 +137,7 @@ int cmd_clear(struct ltsys *lts, int iargc, char **iargv, void *priv)
   return 1;
 }
 
+void opt_error(char *str);
 int cmd_init(struct ltsys *lts, int iargc, char **iargv, void *priv)
 {
   if (iargc != 2)

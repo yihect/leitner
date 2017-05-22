@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <string.h>
 #include <dirent.h>
@@ -48,6 +49,27 @@ void start_info( )
   printf("Leitner Sys for Vocabulary 0.3 \n");
   printf("Type \"help\" to get cmd list, and type \"help cmd\" for details on the cmd\n");
   printf("Type \"exit\" to leave if you want. \n");
+}
+
+int parse_args(char *cmdline, char **av)
+{
+  char *tok,i ;
+  int ac = 0;
+  static const char *delim = " \f\n\r\t\v";
+
+  for (tok = strtok(cmdline, delim); tok; tok = strtok(NULL, delim))
+  {
+    av[ac++] = tok;
+
+    if ((strstr(tok, "|") != NULL) || (strstr(tok, ">") != NULL))
+    {
+      ac--;
+      break;
+    }
+  }
+  av[ac]= NULL;
+
+  return ac;
 }
 
 static void restore_sanity(struct ltsys *pls)
@@ -457,27 +479,6 @@ void cmdline_init(struct ltsys *pls)
       vi_movement_keymap);
   rl_generic_bind(ISFUNC, "[B", (char *)rl_get_next_history, 
       vi_movement_keymap);
-}
-
-int parse_args(char *cmdline, char **av)
-{
-  char *tok,i ;
-  int ac = 0;
-  static const char *delim = " \f\n\r\t\v";
-
-  for (tok = strtok(cmdline, delim); tok; tok = strtok(NULL, delim))
-  {
-    av[ac++] = tok;
-
-    if ((strstr(tok, "|") != NULL) || (strstr(tok, ">") != NULL))
-    {
-      ac--;
-      break;
-    }
-  }
-  av[ac]= NULL;
-
-  return ac;
 }
 
 

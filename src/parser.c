@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include <stdarg.h>
+#include <ctype.h>
 #include "util.h"
 #include "parser.h"
+#include "ltsys.h"
 
 #define SECTION 0x01
 #define OPTION  0x02
@@ -13,11 +16,11 @@
 
 #include "keywords.h"
 
-#define KEYWORD(symbol, symlen, flags, nargs, func, line_func) \
-    [ K_##symbol ] = { #symbol, symlen, flags, nargs + 1, func, line_func},
+#define KEYWORD(symbol, symlen, flags, level, nargs, func, line_func) \
+    [ K_##symbol ] = { #symbol, symlen, flags, level, nargs + 1, func, line_func},
 
 static struct kword keyword_info[KEYWORD_COUNT] = {
-    [ K_UNKNOWN ] = { "UNKNOWN", 0, 0, 0, 0, 0 },
+    [ K_UNKNOWN ] = { "UNKNOWN", 0, 0, 0, 0, 0, 0 },
 #include "keywords.h"
 };
 #undef keyword
@@ -27,6 +30,8 @@ static struct kword keyword_info[KEYWORD_COUNT] = {
 #define kw_func(kw) (keyword_info[kw].func)
 #define kw_line_func(kw) (keyword_info[kw].line_func)
 #define kw_nargs(kw) (keyword_info[kw].nargs)
+#define kw_symlen(kw) (keyword_info[kw].symlen)
+#define kw_level(kw) (keyword_info[kw].level)
 
 static int lookup_keyword(const char *s)
 {
@@ -37,6 +42,8 @@ static int lookup_keyword(const char *s)
       return (*(s+1)=='A')? K_GRAM : K_GREF;
     case 'I':	//ITEM
       return K_ITEM;
+    case 'S':	//SITEM
+      return K_SITEM;
     case 'R':	//RFX, RFREF
       if (*(s+1) == 'X')	return K_RFX;
       else	return K_RFREF;
@@ -55,16 +62,56 @@ static void parse_line_no_op(struct parse_context *state, int nargs, char **args
 {
 }
 
-static void parse_new_section(struct parse_context *state, int kw,
-    int nargs, char **args)
+static void parse_new_section(struct parse_context *state, int kw, int nargs, char **args)
 {
-  state->context = (void *)(kw_func(kw))(state, nargs, args);
-  if (state->context) {
-    state->parse_line = kw_line_func(kw);
+  void *ctxt = NULL;
+  int kwlevel = kw_level(kw);
+
+  ctxt = (void *)(kw_func(kw))(state, nargs, args);
+  if (ctxt) {
+    if (kwlevel != state->cur_level)
+      state->cur_level = kwlevel;
+    state->pcn[state->cur_level].context = ctxt;
+    state->pcn[state->cur_level].parse_line = kw_line_func(kw);
     return;
   }
 
-  state->parse_line = parse_line_no_op;
+  /* if kw_func() fails, clear ctxt/parse_line of level kwlevel */
+  state->pcn[kwlevel].context = NULL;
+  state->pcn[kwlevel].parse_line = parse_line_no_op;
+}
+
+void parse_error(struct parse_context *state, const char *fmt, ...)
+{
+    va_list ap;
+    char buf[128];
+    int off;
+
+    snprintf(buf, 128, "%s: %d: ", state->filename, state->line);
+    buf[127] = 0;
+    off = strlen(buf);
+
+    va_start(ap, fmt);
+    vsnprintf(buf + off, 128 - off, fmt, ap);
+    va_end(ap);
+    buf[127] = 0;
+    ERROR(buf);
+}
+
+static int valid_name(const char *name)
+{
+#if 0
+    if (strlen(name) > 16) {
+        return 0;
+    }
+#endif
+    while (*name) {
+        if (!isalpha(*name) && (*name != '_') && (*name != '-')) {
+            return 0;
+        }
+        name++;
+    }
+    return 1;
 }
 
 int next_token(struct parse_context *state)
@@ -120,6 +167,9 @@ textresume:
       case ' ':
       case '\t':
       case '\r':
+      case '.':
+      case ':':
+      case ';':
 	x++;
 	goto textdone;
       case '\n':
@@ -127,6 +177,7 @@ textresume:
 	x++;
 	goto textdone;
       case '"':
+      case '[':
 	x++;
 	for (;;) {
 	  switch (*x) {
@@ -135,6 +186,7 @@ textresume:
 	      state->ptr = x;
 	      return T_EOF;
 	    case '"':
+	    case ']':
 	      x++;
 	      goto textresume;
 	    default:
@@ -184,45 +236,65 @@ textresume:
   return T_EOF;
 }
 
-static void parse_config(const char *fn, char *s)
+#define debug_parse 1
+static void parse_ltd(const char *fn, char *s)
 {
-    struct parse_context state;
-    char *args[INTT_PARSER_MAXARGS];
-    int nargs;
+  struct parse_context state;
+  char *args[INTT_PARSER_MAXARGS];
+  int nargs;
+#if debug_parse
+  char buf[128];
+#endif
 
-    nargs = 0;
-    state.filename = fn;
-    state.line = 0;
-    state.ptr = s;
-    state.nexttoken = 0;
-    state.parse_line = parse_line_no_op;
-    state.old_parse_line = 0;
+  nargs = 0;
+  state.filename = fn;
+  state.line = 0;
+  state.ptr = s;
+  state.nexttoken = 0;
+  state.cur_level = 0;
+  for (int i=0; i<3; i++) {
+    state.pcn[i].context = NULL;
+    state.pcn[i].parse_line = parse_line_no_op;
+  }
 
-    for (;;) {
-        switch (next_token(&state)) {
-        case T_EOF:
-            state.parse_line(&state, 0, 0);
-	    break;
-        case T_NEWLINE:
-            state.line++;
-            if (nargs) {
-                int kw = lookup_keyword(args[0]);
-                if (kw_is(kw, SECTION)) {
-                    state.parse_line(&state, 0, 0);
-                    parse_new_section(&state, kw, nargs, args);
-                } else {
-                    state.parse_line(&state, nargs, args);
-                }
-                nargs = 0;
-            }
-            break;
-        case T_TEXT:
-            if (nargs < INTT_PARSER_MAXARGS) {
-                args[nargs++] = state.text;
-            }
-            break;
-        }
+  for(;;) {
+    switch (next_token(&state)) {
+      case T_EOF:
+	state.pcn[state.cur_level].parse_line(&state, nargs, args);
+	goto parser_done;
+      case T_NEWLINE:
+	state.line++;
+	if (nargs) {
+#if debug_parse
+	  memset(buf, 0, sizeof(buf));
+	  for (int i=0; i<nargs; i++) {
+	    strcat(buf, "|");
+	    strcat(buf, args[i]);
+	  }
+	  PINFO(buf);
+#endif
+	  int kw = lookup_keyword(args[0]);
+	  if(kw_is(kw, SECTION)) {
+	    parse_new_section(&state, kw, nargs, args);
+	    state.pcn[state.cur_level].parse_line(&state, nargs, args);
+	  } else if(kw != K_UNKNOWN) {
+	    /* for XREF keywords, they must be placed in front of level zero
+	     * block, before any ITEM clauses.
+	     * So we can use parse_line() ptr at current level in pcn[] array*/
+	    state.pcn[state.cur_level].parse_line(&state, nargs, args);
+	  }
+	  nargs = 0;
+	}
+	break;
+      case T_TEXT:
+	if (nargs < INTT_PARSER_MAXARGS) {
+	  args[nargs++] = state.text;
+	}
+	break;
     }
+  }
+
+parser_done: return;
 }
 
 int ltd_parse_file(const char *fn)
@@ -231,23 +303,9 @@ int ltd_parse_file(const char *fn)
     data = read_file(fn, 0);
     if (!data) return -1;
 
-    parse_config(fn, data);
+    parse_ltd(fn, data);
     //dump();
     return 0;
-}
-
-static int valid_name(const char *name)
-{
-    if (strlen(name) > 16) {
-        return 0;
-    }
-    while (*name) {
-        if (!isalnum(*name) && (*name != '_') && (*name != '-')) {
-            return 0;
-        }
-        name++;
-    }
-    return 1;
 }
 
 static void *parse_rfx(struct parse_context *state, int nargs, char **args)
@@ -261,11 +319,28 @@ static void parse_line_rfx(struct parse_context *state, int nargs, char **args)
 
 static void *parse_voc(struct parse_context *state, int nargs, char **args)
 {
-  return 0;
+  struct v_entry *ve = NULL;
+
+  if (!valid_name(args[1])) {
+    parse_error(state, "invalid voc entry name '%s'\n", args[1]);
+    return 0;
+  }
+
+#if 0
+  ve = voc_find_by_name(args[1]);
+  if (ve) {
+    parse_error(state, "ignored duplicate definition of voc entry '%s'\n", args[1]);
+    return 0;
+  }
+#endif
+
+  ve = malloc(sizeof(*ve));
+  return ve;
 }
 
 static void parse_line_voc(struct parse_context *state, int nargs, char **args)
 {
+  struct v_entry *ve = (struct v_entry *)state->pcn[0].context;
 }
 
 static void *parse_vgrp(struct parse_context *state, int nargs, char **args)
@@ -301,12 +376,20 @@ static void parse_line_item(struct parse_context *state, int nargs, char **args)
 {
 }
 
+static void *parse_sitem(struct parse_context *state, int nargs, char **args)
+{
+  return 0;
+}
+static void parse_line_sitem(struct parse_context *state, int nargs, char **args)
+{
+}
+
 #if 0
 static void *parse_service(struct parse_context *state, int nargs, char **args)
 {
   /*
     struct service *svc;
-    if (nargs < 3) {
+    if (nargs< 3) {
         parse_error(state, "services must have a name and a program\n");
         return 0;
     }

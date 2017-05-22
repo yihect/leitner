@@ -14,7 +14,7 @@ CuSuite* parser_getsuite()
 /* tests */
 void test_parser(CuTest *tc)
 {
-  ltd_parse_file("./to_parse.ltd");
+  ltd_parse_file("./utest/test_parse.ltd");
 }
 
 

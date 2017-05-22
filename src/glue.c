@@ -50,7 +50,8 @@
 //  help functions
 
 /* for LnJ */
-inline unsigned LnJ(unsigned n)
+static inline unsigned LnJ(unsigned n);
+unsigned LnJ(unsigned n)
 {
   unsigned r=1;
   

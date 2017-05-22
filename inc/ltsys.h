@@ -1,6 +1,7 @@
 #ifndef _LTSYS_H_
 #define _LTSYS_H_
 
+#include <stdio.h>
 #include "vs.h"
 #include "util.h"
 
@@ -8,6 +9,12 @@
 
 #define ERROR(msg) \
   do { perror(msg); exit(EXIT_FAILURE); } while (0)
+
+#define INFO(msg) \
+  do { perror(msg); } while (0)
+
+#define PINFO(msg) \
+  do { printf("%s\n", msg); } while (0)
 
 /////////////////////////////////////////////////////////////
 //  ltsys 
@@ -51,6 +58,7 @@ int cmd_modify(struct ltsys *lts, int iargc, char **iargv, void *priv);
 int cmd_help(struct ltsys *lts, int iargc, char **iargv, void *priv);
 int cmd_exit(struct ltsys *lts, int iargc, char **iargv, void *priv);
 
+void cmd_disp();
 void cmd_clear_help();
 void cmd_init_help();
 void cmd_load_help();

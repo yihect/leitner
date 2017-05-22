@@ -3,6 +3,7 @@
 #include "CuTest.h"
 #include "glue_tests.h"
 #include "mempool_tests.h"
+#include "parser_tests.h"
 
 
 void RunAllTests(void)
@@ -12,6 +13,7 @@ void RunAllTests(void)
 
 	CuSuiteAddSuite(suite, glue_getsuite());
 	CuSuiteAddSuite(suite, mempool_getsuite());
+	CuSuiteAddSuite(suite, parser_getsuite());
 
 	CuSuiteRun(suite);
 	CuSuiteSummary(suite,output);

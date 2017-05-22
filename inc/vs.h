@@ -28,6 +28,7 @@
 #define NEW_FIRST_INODE_LINENR	0x4e46494c	// NewFIL
 #define NEW_COUNT	0x4e434e54	// NewCNT
 
+typedef unsigned short	idt;
 
 ///////////////////////////////////////////////////
 // language basics
@@ -47,9 +48,24 @@ struct vs_item
   int cur_lb_level;	// current ltbox level
 };
 
+struct v_entry
+{
+  idt ve_id;
+  char *ve_name;
+  void *mw;
+};
+
 struct v_item
 {
+  idt vi_id;
+  char *vi_name;
+  char *vi_meaning;
   void *tw;
+  union
+  {
+    char *ext1;
+    char *ext2;
+  } u;
 };
 
 struct g_item
@@ -194,9 +210,12 @@ enum { GLOF_MW_SENT_VUSED_LHEAD/*E2*/, GLOF_TW_SENT_VUSEDUSAGE_LHEAD/*F2*/,
 
 enum { GLIT_LHEAD_1TON, GLIT_LHEAD_MTON, GLIT_LNODE, GLIT_LNODE_TOP_BACKPT, GLIT_LNODE_BOTTOM_BACKPT, GLIT_DUMMY };
 
-inline unsigned bbits(unsigned n) __attribute__((always_inline));
-inline unsigned is_offset_valid(unsigned *gn_bitmap, unsigned gn_type) __attribute__((always_inline));
-inline void mark_offset(unsigned *gn_bitmap, unsigned gn_type, unsigned validness) __attribute__((always_inline));
+//inline unsigned bbits(unsigned n) __attribute__((always_inline));
+unsigned bbits(unsigned n);
+//inline unsigned is_offset_valid(unsigned *gn_bitmap, unsigned gn_type) __attribute__((always_inline));
+unsigned is_offset_valid(unsigned *gn_bitmap, unsigned gn_type);
+//inline void mark_offset(unsigned *gn_bitmap, unsigned gn_type, unsigned validness) __attribute__((always_inline));
+void mark_offset(unsigned *gn_bitmap, unsigned gn_type, unsigned validness);
 void set_offset(unsigned *gn_bitmap, unsigned gn_type, unsigned offset);
 unsigned get_offset(unsigned *gn_bitmap, unsigned gn_type);
 
@@ -255,6 +274,9 @@ struct lt_box
   struct list_head i_list; 	// vs item list
   struct lt_box_meta *ltbm;	
 };
+
+struct ltsys;
+int go_lbox(struct ltsys *lts, int lblevel, int go_lbox_type, int *puser_gave_cnt, int ugc_original);
 
 #endif /* _VS_H_ */
 

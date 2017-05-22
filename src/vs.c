@@ -45,7 +45,8 @@ int lbox_is_full(struct ltsys *lts, int lblevel)
   return !(plb->vs_cnt < plb->vs_limit);
 }
 
-inline int lbox_is_empty(struct ltsys *lts, int lblevel)
+static inline int lbox_is_empty(struct ltsys *lts, int lblevel);
+int lbox_is_empty(struct ltsys *lts, int lblevel)
 {
   struct lt_box *plb = &(lts->lt_boxes[lblevel]);
   return plb->vs_cnt == 0;
