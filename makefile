@@ -31,6 +31,7 @@ sources := 	utest/AllTests.c \
 		utest/glue_tests.c \
 		utest/mempool_tests.c \
 		utest/cvspool_tests.c \
+		utest/objvec_tests.c \
 		utest/parser_tests.c \
 		src/parser.c \
 	 	src/ltsys.c \
@@ -39,6 +40,7 @@ sources := 	utest/AllTests.c \
 		src/glue.c \
 		src/mempool.c \
 		src/cvspool.c \
+		src/objvec.c \
 		src/util.c \
 		src/main.c
 
