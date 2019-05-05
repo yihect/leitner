@@ -109,11 +109,13 @@ unsigned int slots_num_adjust(unsigned int slots_num);
 void set_fnode_len(cvspool_fnode0 *fn0, unsigned int len);
 int get_fnode_len(cvspool_fnode0 *fn0);
 
+unsigned int get_bnode_mem_len(cvspool *cvsp, char *mem);
+
 int cvsp_init(cvspool **cvsp, unsigned int slots_num);
 void cvsp_destroy(cvspool *cvsp);
 
 char *cvsp_alloc(cvspool *cvsp, unsigned int size);
-void cvsp_free(cvspool *cvsp, void *str);
+void cvsp_free(cvspool *cvsp, char *str);
 
 #endif
 

@@ -7,6 +7,7 @@ CuSuite* cvspool_getsuite()
 {
 	CuSuite *suite = CuSuiteNew();
 	SUITE_ADD_TEST(suite, test_fuck_macro);
+	SUITE_ADD_TEST(suite, test_slots_num_adjust);
 	SUITE_ADD_TEST(suite, test_init_cvspool);
 	SUITE_ADD_TEST(suite, test_alloc1_cvspool);
 	SUITE_ADD_TEST(suite, test_alloc2_cvspool);
@@ -47,6 +48,35 @@ void test_fuck_macro(CuTest *tc)
 	CuAssertIntEquals(tc, 65536, SLOTABS_POS(1,0));
 	CuAssertIntEquals(tc, 131072, SLOTABS_POS(2,0));
 	CuAssertIntEquals(tc, 1048575, SLOTABS_POS(0xf,0xffff));
+}
+
+void test_slots_num_adjust(CuTest *tc)
+{
+	printf("test_slots_num_adjust() testing... \n");
+
+	/* make sure there are 3 slots at least */
+	CuAssertIntEquals(tc, 3, slots_num_adjust(1));
+	CuAssertIntEquals(tc, 3, slots_num_adjust(2));
+
+	/* across block border: make sure after blocked(+3) in one trunk,
+	 * the last block has enouth slots space */
+	CuAssertIntEquals(tc, 65533, slots_num_adjust(65533));
+	CuAssertIntEquals(tc, 65534+2, slots_num_adjust(65534));
+	CuAssertIntEquals(tc, 65535+1, slots_num_adjust(65535));
+	CuAssertIntEquals(tc, 65536, slots_num_adjust(65536));
+	CuAssertIntEquals(tc, 65537, slots_num_adjust(65537));
+	CuAssertIntEquals(tc, 65538, slots_num_adjust(65538));
+	CuAssertIntEquals(tc, 65533*2, slots_num_adjust(65533*2));
+	CuAssertIntEquals(tc, 65533*2+1, slots_num_adjust(65533*2+1));
+	CuAssertIntEquals(tc, 65533*2+2, slots_num_adjust(65533*2+2));
+
+	/* across trunk border: note there is a free_header(3slots) for every trunk */
+	CuAssertIntEquals(tc, (65533+15*65536-1), slots_num_adjust(65533+15*65536-1));
+	CuAssertIntEquals(tc, (65533+15*65536), slots_num_adjust(65533+15*65536));
+	CuAssertIntEquals(tc, (65533+15*65536+3), slots_num_adjust(65533+15*65536+1));
+	CuAssertIntEquals(tc, (65533+15*65536+3), slots_num_adjust(65533+15*65536+2));
+	CuAssertIntEquals(tc, (65533+15*65536+3), slots_num_adjust(65533+15*65536+3));
+	CuAssertIntEquals(tc, ((65533+15*65536)*2+3), slots_num_adjust((65533+15*65536)*2+1));
 }
 
 void test_init_cvspool(CuTest *tc)
@@ -273,6 +303,83 @@ void test_init_cvspool(CuTest *tc)
 	CuAssertIntEquals(tc, IBOFF_OF_SLOTABS(0), pfn->next);
 	CuAssertIntEquals(tc, IBOFF_OF_SLOTABS(0), pfn->prev);
 	CuAssertIntEquals(tc, PNBLKIDX(BLKIDX_OF_SLOTABS(0), BLKIDX_OF_SLOTABS(0)), pfn->idx);
+
+	cvsp_destroy(cp);
+
+	/* 9th, init a cvspool with size of (1048576*2-4)Slots*4=(1048576*2*4-4*4)Bytes
+	 * 1048576*2 Slots is devided to 3 trunks(of size 1048573, 1048573 and 3)
+	 * so, the free list are:
+	 *	trunk0:	0<-64k-3=64k=64k=64k=...=64k->0, totally 16 Blocks
+	 *	trunk1:	0<-64k-3=64k=64k=64k=...=64k->0, totally 16 Blocks
+	 *	trunk2:	0<-3->0 */
+	if ((ret=cvsp_init(&cp, 2*16*64*1024-4)) != 0)
+		printf("cvsp_init() failure...\n");
+
+	CuAssertPtrNotNull(tc, cp);
+
+	/* trunk 0&1 */
+	t = cp->trunk_list;
+
+	for (int i=0; i<2; i++) {
+		CuAssertPtrNotNull(tc, t->mem);
+		CuAssertIntEquals(tc, slots_num_adjust(16*64*1024-3), t->t_total);
+		CuAssertIntEquals(tc, 0, t->t_used);
+
+		/* 0th block of trunk 0*/
+		pfn = (cvspool_fnode0 *)(t->mem + (MIN_NODE_SIZE<<2));
+		CuAssertIntEquals(tc, FREE_GUARD0, pfn->pad);
+		CuAssertIntEquals(tc, slots_num_adjust(64*1024-3), get_fnode_len(pfn));
+		CuAssertIntEquals(tc, IBOFF_OF_SLOTABS(64*1024), pfn->next);
+		CuAssertIntEquals(tc, IBOFF_OF_SLOTABS(0), pfn->prev);
+		CuAssertIntEquals(tc, PNBLKIDX(BLKIDX_OF_SLOTABS(0), BLKIDX_OF_SLOTABS(64*1024)), pfn->idx);
+
+		/* 1th block of trunk 0*/
+		//cvspool_fnode0 *pp_pfn = pfn;
+		pfn = (cvspool_fnode0 *)((char *)t->mem+64*1024*4);
+		CuAssertIntEquals(tc, FREE_GUARD0, pfn->pad);
+		CuAssertIntEquals(tc, slots_num_adjust(64*1024), get_fnode_len(pfn));
+		CuAssertIntEquals(tc, IBOFF_OF_SLOTABS(0), pfn->next);
+		CuAssertIntEquals(tc, IBOFF_OF_SLOTABS(3), pfn->prev);
+		CuAssertIntEquals(tc, PNBLKIDX(BLKIDX_OF_SLOTABS(0), BLKIDX_OF_SLOTABS(128*1024)), pfn->idx);
+
+		/* 2th~14th block of trunk 0*/
+		for (int j=2; j<=14; j++) {
+			pfn = (cvspool_fnode0 *)((char *)t->mem+j*64*1024*4);
+			CuAssertIntEquals(tc, FREE_GUARD0, pfn->pad);
+			CuAssertIntEquals(tc, slots_num_adjust(64*1024), get_fnode_len(pfn));
+			CuAssertIntEquals(tc, IBOFF_OF_SLOTABS(0), pfn->next);
+			CuAssertIntEquals(tc, IBOFF_OF_SLOTABS(0), pfn->prev);
+			CuAssertIntEquals(tc, PNBLKIDX(BLKIDX_OF_SLOTABS((j-1)*64*1024), BLKIDX_OF_SLOTABS((j+1)*64*1024)), pfn->idx);
+		}
+
+		/* 15th block of trunk 0*/
+		//cvspool_fnode0 *p_pfn = pfn;
+		pfn = (cvspool_fnode0 *)((char *)t->mem+15*64*1024*4);
+		CuAssertIntEquals(tc, FREE_GUARD0, pfn->pad);
+		CuAssertIntEquals(tc, slots_num_adjust(64*1024), get_fnode_len(pfn));
+		CuAssertIntEquals(tc, IBOFF_OF_SLOTABS(0), pfn->next);
+		CuAssertIntEquals(tc, IBOFF_OF_SLOTABS(0), pfn->prev);
+		CuAssertIntEquals(tc, PNBLKIDX(BLKIDX_OF_SLOTABS(14*64*1024), BLKIDX_OF_SLOTABS(0)), pfn->idx);
+
+		t = t->next;
+	}
+
+	/* trunk 2 */
+	CuAssertPtrNotNull(tc, t->mem);
+	CuAssertIntEquals(tc, slots_num_adjust(3), t->t_total);
+	CuAssertIntEquals(tc, 0, t->t_used);
+
+	pfn = (cvspool_fnode0 *)(t->mem + (MIN_NODE_SIZE<<2));
+	CuAssertIntEquals(tc, FREE_GUARD0, pfn->pad);
+	CuAssertIntEquals(tc, 3, get_fnode_len(pfn));
+	CuAssertIntEquals(tc, IBOFF_OF_SLOTABS(0), pfn->next);
+	CuAssertIntEquals(tc, IBOFF_OF_SLOTABS(0), pfn->prev);
+	CuAssertIntEquals(tc, PNBLKIDX(BLKIDX_OF_SLOTABS(0), BLKIDX_OF_SLOTABS(0)), pfn->idx);
+
+	/* no other trunks */
+	CuAssertPtrNull(tc, t->next);
+
+	cvsp_destroy(cp);
 }
 
 void test_alloc1_cvspool(CuTest *tc)

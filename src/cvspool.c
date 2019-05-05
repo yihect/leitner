@@ -30,7 +30,7 @@ void set_bnode_len(cvspool_bnode0 *bn0, unsigned int len)
 	bn0->len_1 = len-1;
 }
 
-int get_bnode_len(cvspool_bnode0 *bn0)
+unsigned int get_bnode_len(cvspool_bnode0 *bn0)
 {
 	return bn0->len_1+1;
 }
@@ -95,15 +95,33 @@ int cvsp_init_trunk(cvspool_trunk *t, u_int32_t tslots_cnt)
 
 unsigned int slots_num_adjust(unsigned int slots_num)
 {
+	unsigned int st = slots_num, nt = 0;
+
+	/* take care of situation where across trunk border */
+	nt++;
+	st += MIN_NODE_SIZE;
+	while ((st/(MAX_TRUNK_SIZE>>2)) && (st%(MAX_TRUNK_SIZE>>2))) {
+		nt++;
+		st -= (MAX_TRUNK_SIZE>>2);
+		st += MIN_NODE_SIZE;
+	}
+	if (nt > 1) { /* several trunks? recursion for the last trunk */
+		unsigned int slots_in_last_trunk =
+			slots_num - ((nt-1) * ((MAX_TRUNK_SIZE>>2) - MIN_NODE_SIZE));
+		slots_num -= slots_in_last_trunk;
+		slots_num += slots_num_adjust(slots_in_last_trunk);
+		return slots_num;
+	}
+
+	/* make sure there are MIN_NODE_SIZE slots in a block/trunk */
 	if ((slots_num < MIN_NODE_SIZE) && (slots_num % MIN_NODE_SIZE))
 	{
 		slots_num += (MIN_NODE_SIZE - (slots_num % MIN_NODE_SIZE));
 		return slots_num;
 	}
 
+	/* make sure slot num of the last blk in the last trunk is >= MIN_NODE_SIZE */
 	int remain_after_blocked = (slots_num + MIN_NODE_SIZE) % (MAX_BLK_SIZE>>2);
-
-	/* make sure slot num of the last blk is >= MIN_NODE_SIZE */
 	if ((remain_after_blocked < MIN_NODE_SIZE) && (remain_after_blocked % MIN_NODE_SIZE))
 		slots_num += (MIN_NODE_SIZE - (remain_after_blocked % MIN_NODE_SIZE));
 
@@ -131,15 +149,15 @@ int cvsp_init(cvspool **cvsp, unsigned int slots_num)
 		if (sp->trunk_list == NULL)
 			sp->trunk_list=ptrunk;
 
-		//int tsize = MIN((MAX_TRUNK_SIZE-(MIN_NODE_SIZE<<2)), slots_num<<2);
-		int tsize = MIN(MAX_TRUNK_SIZE, slots_num<<2);
+		/* adjust for blk0 in every trunk */
+		int tsize = MIN((MAX_TRUNK_SIZE-(MIN_NODE_SIZE<<2)), (tremain<<2));
 		cvsp_init_trunk(ptrunk, tsize>>2);
 
 		if (prev_trunk != NULL)
 			prev_trunk->next = ptrunk;
 		prev_trunk = ptrunk;
 
-		tremain -= (MAX_BLK_SIZE>>2);
+		tremain -= (tsize>>2);
 	} while (tremain > 0);
 
 	*cvsp = sp;
@@ -186,7 +204,7 @@ char *cvsp_alloc(cvspool *cvsp, unsigned int size)
 	/* There are 4Bytes for meta data in busy node.
 	 * And a busy node occupies 3 slots at least. */
 	unsigned int need_slots = MAX(((size+4+3)>>2), MIN_NODE_SIZE);
-	assert(need_slots <= MAX_BLK_SIZE>>2);
+	assert(need_slots <= (MAX_BLK_SIZE>>2));
 
 	cvspool_fnode0 *pfn=NULL;
 	cvspool_trunk *t = cvsp->trunk_list;
@@ -235,7 +253,7 @@ char *cvsp_alloc(cvspool *cvsp, unsigned int size)
 	return (char *)(pbn0+1);
 }
 
-cvspool_trunk *get_trunk(cvspool *cvsp, void *str)
+cvspool_trunk *get_trunk(cvspool *cvsp, char *str)
 {
 	cvspool_trunk *t = cvsp->trunk_list;
 	while (t) {
@@ -252,7 +270,20 @@ cvspool_trunk *get_trunk(cvspool *cvsp, void *str)
 	return t;
 }
 
-void cvsp_free(cvspool *cvsp, void *str)
+/* get usable memory size of a busy node, in bytes */
+unsigned int get_bnode_mem_len(cvspool *cvsp, char *mem)
+{
+	cvspool_trunk *t = get_trunk(cvsp, mem);
+	assert(t != NULL);
+
+	cvspool_bnode0 *pbn = (cvspool_bnode0 *)(mem-sizeof(cvspool_bnode0));
+	assert(pbn->g0 == BUSY_GUARD0);
+
+	/* 1 slots for busy meta */
+	return (get_bnode_len(pbn)-1) << 2;
+}
+
+void cvsp_free(cvspool *cvsp, char *str)
 {
 	cvspool_trunk *t = get_trunk(cvsp, str);
 

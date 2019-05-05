@@ -11,6 +11,7 @@ CuSuite* cvspool_getsuite();
 
 /* tests */
 void test_fuck_macro(CuTest *tc);
+void test_slots_num_adjust(CuTest *tc);
 void test_init_cvspool(CuTest *tc);
 void test_alloc1_cvspool(CuTest *tc);
 void test_alloc2_cvspool(CuTest *tc);
