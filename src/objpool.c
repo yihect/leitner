@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 #include "objpool.h"
 
  /*
@@ -103,6 +105,8 @@ objpool_t *create_objpool(int obj_size)
     mpl->free_obj_nr = 0;
     mpl->slab_head = NULL;
     mpl->recent_slab = NULL;
+
+    return mpl;
 }
 
 void destroy_objpool(objpool_t *mpl)
@@ -149,6 +153,16 @@ found:
     mpl->free_obj_nr--;
 
     return object;
+}
+
+void *objpool_zalloc(objpool_t *mpl)
+{
+	void *obj = objpool_alloc(mpl);
+
+	assert(obj != NULL);
+	memset(obj, 0x0, mpl->obj_size);
+
+	return obj;
 }
 
 void objpool_free(objpool_t *mpl, void *object)

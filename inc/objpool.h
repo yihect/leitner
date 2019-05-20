@@ -25,6 +25,7 @@ objpool_t *create_objpool(int obj_size);
 void destroy_objpool(objpool_t *mpl);
 
 void *objpool_alloc(objpool_t *mpl);
+void *objpool_zalloc(objpool_t *mpl);
 
 void objpool_free(objpool_t *mpl, void *mem);
 
