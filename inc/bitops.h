@@ -1,17 +1,28 @@
 #ifndef _LINUX_BITOPS_H
 #define _LINUX_BITOPS_H
-#include <asm/types.h>
+//#include <asm/types.h>
 
-#ifdef	__KERNEL__
+#include <sys/types.h>
+#include "util.h"
+#include "types.h"
+#include "bitmap.h"
+
+/* yihect: remember to adjust this */
+//#define DECLARE_BITMAP(name,bits) \
+	unsigned long name[BITS_TO_LONGS(bits)]
+
+#define BITS_PER_BYTE		8
+#define BITS_PER_LONG		(sizeof(long ) * BITS_PER_BYTE)
+
+//#ifdef	__KERNEL__
 #define BIT(nr)			(1UL << (nr))
 #define BIT_ULL(nr)		(1ULL << (nr))
-#define BIT_MASK(nr)		(1UL << ((nr) % BITS_PER_LONG))
-#define BIT_WORD(nr)		((nr) / BITS_PER_LONG)
+//#define BIT_MASK(nr)		(1UL << ((nr) % BITS_PER_LONG))
+//#define BIT_WORD(nr)		((nr) / BITS_PER_LONG)
 #define BIT_ULL_MASK(nr)	(1ULL << ((nr) % BITS_PER_LONG_LONG))
 #define BIT_ULL_WORD(nr)	((nr) / BITS_PER_LONG_LONG)
-#define BITS_PER_BYTE		8
-#define BITS_TO_LONGS(nr)	DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
-#endif
+//#define BITS_TO_LONGS(nr)	DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
+//#endif
 
 /*
  * Create a contiguous bitmask starting at bit position @l and ending at
@@ -33,7 +44,8 @@ extern unsigned long __sw_hweight64(__u64 w);
  * Include this here because some architectures need generic_ffs/fls in
  * scope
  */
-#include <asm/bitops.h>
+//#include <asm/bitops.h>
+#include "fls.h"
 
 #define for_each_set_bit(bit, addr, size) \
 	for ((bit) = find_first_bit((addr), (size));		\
@@ -75,10 +87,12 @@ static __inline__ int get_count_order(unsigned int count)
 	return order;
 }
 
+/*
 static inline unsigned long hweight_long(unsigned long w)
 {
 	return sizeof(w) == 4 ? hweight32(w) : hweight64(w);
 }
+*/
 
 /**
  * rol64 - rotate a 64-bit value left
@@ -199,12 +213,12 @@ static inline unsigned fls_long(unsigned long l)
  */
 static inline unsigned long __ffs64(u64 word)
 {
-#if BITS_PER_LONG == 32
-	if (((u32)word) == 0UL)
-		return __ffs((u32)(word >> 32)) + 32;
-#elif BITS_PER_LONG != 64
-#error BITS_PER_LONG not 32 or 64
-#endif
+	if (BITS_PER_LONG == 32) {
+		if (((u32)word) == 0UL)
+			return __ffs((u32)(word >> 32)) + 32;
+	}else if (BITS_PER_LONG != 64)
+		ERROR("BITS_PER_LONG not 32 or 64\n");
+
 	return __ffs((unsigned long)word);
 }
 

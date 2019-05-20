@@ -12,10 +12,13 @@
 #ifndef __IDR_H__
 #define __IDR_H__
 
-#include <linux/types.h>
-#include <linux/bitops.h>
-#include <linux/init.h>
-#include <linux/rcupdate.h>
+//#include <linux/types.h>
+//#include <linux/bitops.h>
+//#include <linux/init.h>
+//#include <linux/rcupdate.h>
+
+#include "types.h"
+#include "bitops.h"
 
 /*
  * We want shallower trees and thus more bits covered at each layer.  8
@@ -30,30 +33,33 @@
 struct idr_layer {
 	int			prefix;	/* the ID prefix of this idr_layer */
 	int			layer;	/* distance from leaf */
-	struct idr_layer __rcu	*ary[1<<IDR_BITS];
+	struct idr_layer	*ary[1<<IDR_BITS];
 	int			count;	/* When zero, we can release it */
 	union {
 		/* A zero bit means "space here" */
 		DECLARE_BITMAP(bitmap, IDR_SIZE);
-		struct rcu_head		rcu_head;
+		//struct rcu_head		rcu_head;
 	};
 };
 
 struct idr {
-	struct idr_layer __rcu	*hint;	/* the last layer allocated from */
-	struct idr_layer __rcu	*top;
+	struct idr_layer	*hint;	/* the last layer allocated from */
+	struct idr_layer	*top;
 	int			layers;	/* only valid w/o concurrent changes */
 	int			cur;	/* current pos for cyclic allocation */
-	spinlock_t		lock;
+	//spinlock_t		lock;
 	int			id_free_cnt;
 	struct idr_layer	*id_free;
 };
 
+#if 0
 #define IDR_INIT(name)							\
 {									\
 	.lock			= __SPIN_LOCK_UNLOCKED(name.lock),	\
 }
 #define DEFINE_IDR(name)	struct idr name = IDR_INIT(name)
+#endif
+#define DEFINE_IDR(name)	struct idr name = {0}
 
 /**
  * DOC: idr sync
@@ -77,9 +83,12 @@ struct idr {
  */
 
 void *idr_find_slowpath(struct idr *idp, int id);
-void idr_preload(gfp_t gfp_mask);
-int idr_alloc(struct idr *idp, void *ptr, int start, int end, gfp_t gfp_mask);
-int idr_alloc_cyclic(struct idr *idr, void *ptr, int start, int end, gfp_t gfp_mask);
+//void idr_preload(gfp_t gfp_mask);
+void idr_preload();
+//int idr_alloc(struct idr *idp, void *ptr, int start, int end, gfp_t gfp_mask);
+int idr_alloc(struct idr *idp, void *ptr, int start, int end);
+//int idr_alloc_cyclic(struct idr *idr, void *ptr, int start, int end, gfp_t gfp_mask);
+int idr_alloc_cyclic(struct idr *idr, void *ptr, int start, int end);
 int idr_for_each(struct idr *idp,
 		 int (*fn)(int id, void *p, void *data), void *data);
 void *idr_get_next(struct idr *idp, int *nextid);
@@ -87,7 +96,7 @@ void *idr_replace(struct idr *idp, void *ptr, int id);
 void idr_remove(struct idr *idp, int id);
 void idr_destroy(struct idr *idp);
 void idr_init(struct idr *idp);
-bool idr_is_empty(struct idr *idp);
+int idr_is_empty(struct idr *idp);
 
 /**
  * idr_preload_end - end preload section started with idr_preload()
@@ -97,7 +106,7 @@ bool idr_is_empty(struct idr *idp);
  */
 static inline void idr_preload_end(void)
 {
-	preempt_enable();
+	//preempt_enable();
 }
 
 /**
@@ -114,10 +123,11 @@ static inline void idr_preload_end(void)
  */
 static inline void *idr_find(struct idr *idr, int id)
 {
-	struct idr_layer *hint = rcu_dereference_raw(idr->hint);
+	//struct idr_layer *hint = rcu_dereference_raw(idr->hint);
+	struct idr_layer *hint = idr->hint;
 
 	if (hint && (id & ~IDR_MASK) == hint->prefix)
-		return rcu_dereference_raw(hint->ary[id & IDR_MASK]);
+		return hint->ary[id & IDR_MASK];
 
 	return idr_find_slowpath(idr, id);
 }
@@ -156,17 +166,16 @@ struct ida {
 	struct ida_bitmap	*free_bitmap;
 };
 
-#define IDA_INIT(name)		{ .idr = IDR_INIT((name).idr), .free_bitmap = NULL, }
+#define IDA_INIT(name)		{ .idr = {0}, .free_bitmap = NULL, }
 #define DEFINE_IDA(name)	struct ida name = IDA_INIT(name)
 
-int ida_pre_get(struct ida *ida, gfp_t gfp_mask);
+int ida_pre_get(struct ida *ida);
 int ida_get_new_above(struct ida *ida, int starting_id, int *p_id);
 void ida_remove(struct ida *ida, int id);
 void ida_destroy(struct ida *ida);
 void ida_init(struct ida *ida);
 
-int ida_simple_get(struct ida *ida, unsigned int start, unsigned int end,
-		   gfp_t gfp_mask);
+int ida_simple_get(struct ida *ida, unsigned int start, unsigned int end);
 void ida_simple_remove(struct ida *ida, unsigned int id);
 
 /**
@@ -181,6 +190,6 @@ static inline int ida_get_new(struct ida *ida, int *p_id)
 	return ida_get_new_above(ida, 0, p_id);
 }
 
-void __init idr_init_cache(void);
+void idr_init_cache(void);
 
 #endif /* __IDR_H__ */

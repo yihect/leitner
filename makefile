@@ -24,16 +24,20 @@ RM  	     := rm -f
 app			:= $(BIN_PATH)/ltsys
 
 sources := 	utest/AllTests.c \
-  		utest/CuTest.c \
+		utest/CuTest.c \
 		utest/glue_tests.c \
 		utest/mempool_tests.c \
 		utest/objpool_tests.c \
 		utest/cvspool_tests.c \
 		utest/objvec_tests.c \
+		utest/bitmap_tests.c \
+		utest/idr_tests.c \
 		utest/parser_tests.c \
 		src/parser.c \
-	 	src/ltsys.c \
-  		src/rbtree.c \
+		src/ltsys.c \
+		src/rbtree.c \
+		src/bitmap.c \
+		src/idr.c \
 		src/vs.c \
 		src/glue.c \
 		src/mempool.c \
@@ -41,6 +45,7 @@ sources := 	utest/AllTests.c \
 		src/cvspool.c \
 		src/objvec.c \
 		src/util.c \
+		src/log.c \
 		src/main.c
 
 ################################################
