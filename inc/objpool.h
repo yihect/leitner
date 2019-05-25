@@ -2,21 +2,21 @@
 #define _OBJPOOL_H_
 
 struct slab {
-    void *free;
-    struct slab *next;
+	void *free;
+	struct slab *next;
 };
 
 typedef struct slab slab_t;
 
 struct objpool {
-    int obj_size;
-    int real_obj_size;
-    int slab_size;
-    int slab_nr;
-    int obj_nr;
-    int free_obj_nr;
-    slab_t *slab_head;
-    slab_t *recent_slab;
+	int obj_size;
+	int real_obj_size;
+	int slab_size;
+	int slab_nr;
+	int obj_nr;
+	int free_obj_nr;
+	slab_t *slab_head;
+	slab_t *recent_slab;
 };
 
 typedef struct objpool objpool_t;
