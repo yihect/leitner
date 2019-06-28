@@ -32,6 +32,7 @@ sources := 	utest/AllTests.c \
 		utest/objvec_tests.c \
 		utest/bitmap_tests.c \
 		utest/idr_tests.c \
+		utest/msm_tests.c \
 		utest/parser_tests.c \
 		src/parser.c \
 		src/ltsys.c \
@@ -45,6 +46,8 @@ sources := 	utest/AllTests.c \
 		src/cvspool.c \
 		src/objvec.c \
 		src/util.c \
+		src/msm.c \
+		src/crc32.c \
 		src/log.c \
 		src/main.c
 

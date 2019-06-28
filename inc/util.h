@@ -1,6 +1,7 @@
 #ifndef __UTIL_H_
 #define __UTIL_H_
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
@@ -21,6 +22,29 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
+#define unlikely
+#define likely
+
+/* from kernel.h, note the usage of __typeof__ macro
+ * This looks more complex than it should be. But we need to
+ * get the type for the ~ right in round_down (it needs to be
+ * as wide as the result!), and we want to evaluate the macro
+ * arguments just once each.
+ */
+#define __round_mask(x, y) ((__typeof__(x))((y)-1))
+#define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
+#define round_down(x, y) ((x) & ~__round_mask(x, y))
+
+
+#define ERROR(msg) \
+  do { perror(msg); exit(EXIT_FAILURE); } while (0)
+
+#define INFO(msg) \
+  do { perror(msg); } while (0)
+
+#define PINFO(msg) \
+  do { printf("%s\n", msg); } while (0)
+
 #define BUFSIZE (1500)
 static inline int string_exists(char *s) { return (s ? true : false); }
 
@@ -32,7 +56,6 @@ static inline int string_exists(char *s) { return (s ? true : false); }
 #define STRNEQ(A, B)     (string_exists((char *)A) && string_exists((char *)B) && \
         (strncmp((char *)(A), (char *)(B), strlen((char *)(B))) == 0))
 #define PID_ALIVE(x) (kill(x, 0) == 0)
-
 
 
 char *strip_ending_whitespace(char *line);

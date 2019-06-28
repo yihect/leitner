@@ -10,7 +10,10 @@
 #include <dirent.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include "log.h"
+#include "idr.h"
 #include "ltsys.h"
+#include "objpool.h"
 
 #define ENABLE_RUN_TEST	1
 #if ENABLE_RUN_TEST
@@ -482,6 +485,7 @@ void cmdline_init(struct ltsys *pls)
 }
 
 
+#include "types.h"
 int main(int argc, char *argv[])
 {
 
@@ -546,6 +550,8 @@ int main(int argc, char *argv[])
     return 1;
   } else close(i);
 
+  log_init();
+  idr_init_cache();
   command_init();
   //init from vs&index&meta file
   ltsys_init(pls, bfname);
@@ -582,7 +588,7 @@ int main(int argc, char *argv[])
       }
     }
 
-    if ((i<CMD_NULL) 
+    if ((i<CMD_NULL)
 	|| (strstr(temp_cmdline, "!")!=NULL)
 	|| (strstr(temp_cmdline, ">")!=NULL))
     {

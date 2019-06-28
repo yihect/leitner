@@ -123,10 +123,24 @@ void test_idr_alloc_free(CuTest *tc)
 
 	for (i = 1; i < 10000; i++) {
 		struct item *item = item_create(i, 0);
-		assert(idr_alloc(&idr, item, 1, 20000) == i);
+		ret = idr_alloc(&idr, item, i, i+1);
+		assert(ret == i);
 	}
 
 	idr_for_each(&idr, item_idr_free, &idr);
+
+	/* try to alloc the same id twice */
+	assert(idr_alloc(&idr, (void *)10000, 10000, 10001) == 10000);
+	ret = idr_alloc(&idr, (void *)10000, 10000, 10001);
+	//assert(ret == 10000); //fail
+	assert(ret == -ENOSPC);
+	ret = idr_alloc(&idr, (void *)10001, 10000, 10002);
+	assert(ret == 10001);
+	ret = idr_alloc(&idr, (void *)10001, 10000, 10002);
+	//assert(ret == 10000); //fail
+	//assert(ret == 10001); //fail
+	assert(ret == -ENOSPC);
+
 	idr_destroy(&idr);
 }
 

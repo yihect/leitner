@@ -21,7 +21,7 @@ void test_objp_case1(CuTest *tc)
 	void *new;
 	void *array[1000];
 
-	objpool_t *opl = create_objpool(SIZE);
+	objpool_t *opl = create_objpool(SIZE, 0, NULL);
 
 	for (i = 0; i < 820; i++) {
 		new = objpool_alloc(opl);
@@ -60,7 +60,7 @@ void test_objp_case2(CuTest *tc)
 	void *new;
 	void *array[1000];
 
-	objpool_t *opl = create_objpool(SIZE);
+	objpool_t *opl = create_objpool(SIZE, 0, NULL);
 
 	/* alloc 200 chunks */
 	for (i = 0; i < 200; i++) {
@@ -111,7 +111,7 @@ void test_objp_case3(CuTest *tc)
 	void *new;
 	void *array[1000];
 
-	objpool_t *opl = create_objpool(SIZE);
+	objpool_t *opl = create_objpool(SIZE, 0, NULL);
 
 	/* alloc 128 chunks */
 	for (i = 0; i < 128; i++) {

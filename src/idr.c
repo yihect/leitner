@@ -884,7 +884,7 @@ void idr_init_cache(void)
 				//sizeof(struct idr_layer), 0, SLAB_PANIC, NULL);
 
 	if (idr_layer_cache == NULL)
-		idr_layer_cache = create_objpool(sizeof(struct idr_layer));
+		idr_layer_cache = create_objpool(sizeof(struct idr_layer), 0, NULL);
 }
 
 /**
