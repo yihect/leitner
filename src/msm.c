@@ -227,7 +227,7 @@ static int load_from_mem(struct ser_root_data *srd, void *addr, size_t sz)
 		detail_head = dv; /* save header */
 		if (dsn[i]->sered_sum->sse_len == 0) continue;
 
-		dsn[i]->sered_detail = dv;
+		//dsn[i]->sered_detail = dv;
 		dv = dsn[i]->dec_detail_high(dsn[i], dv);
 		assert(dsn[i]->sered_sum->sse_len == (dv-detail_head));
 	}
@@ -331,6 +331,17 @@ void msm_register_pt(struct ser_root_data *srd, enum ptype p_type,
 	srd->pvec[p_type].deser_low = deser_low;
 }
 
+/* NOTE: this function must be called in *_dec_detail_low() etc,
+ * because that there should be old_id->newid mapping in ididr */
+void *get_new_pool_pt(struct ser_root_data *srd, int old_id)
+{
+	/* get new pool id and then new pool ptr */
+	int newid = idr_find(&srd->ididr, (int)old_id);
+
+	assert(newid != 0);
+	return idr_find(&srd->poolidr, newid);
+}
+
 struct ser_root_data *msm_get()
 {
 	struct ser_root_data * srd = msm_get_no_ref();
@@ -347,10 +358,13 @@ struct ser_root_data *msm_get_no_ref()
 
 	memset(only_srd, 0, sizeof(struct ser_root_data));
 	INIT_LIST_HEAD(&only_srd->ds_list);
+	idr_init(&only_srd->poolidr);
+	idr_init(&only_srd->ididr);
 
 	/* init pool ops */
 	msm_register_pt(only_srd, PT_OBJP, objpool_ser_getlen,
 			objpool_ser, objpool_deser_high, objpool_deser_low);
+	msm_register_pt(only_srd, PT_NOP, NULL, NULL, NULL, NULL);
 
 	return only_srd;
 }

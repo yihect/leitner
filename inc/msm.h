@@ -94,6 +94,8 @@ struct ser_root_data *msm_get();
 struct ser_root_data *msm_get_no_ref();
 void msm_put(struct ser_root_data *srd);
 
+void *get_new_pool_pt(struct ser_root_data *srd, int old_id);
+
 void msm_register_ds(struct ser_root_data *srd, struct ds_node *ds, enum ptype p_type, void *p_pt);
 void msm_register_pt(struct ser_root_data *srd, enum ptype p_type,
 		    unsigned int (*getlen)(struct ser_root_data *srd, void *mpl),

@@ -323,7 +323,9 @@ char *objpool_deser_high(struct ser_root_data *srd, void *mpl, char *src)
 		s = s->next;
 	}
 	((struct objpool *)mpl)->free_obj_nr = sered_pl->free_obj_nr;
-	idr_alloc(&srd->ididr, (void *)((struct objpool *)mpl)->pool_id, sered_pl->pool_id, sered_pl->pool_id+1);
+	int retid = idr_alloc(&srd->ididr, (void *)((struct objpool *)mpl)->pool_id,
+			      sered_pl->pool_id, sered_pl->pool_id+1);
+	assert(retid == sered_pl->pool_id);
 
 	return saved_pt;
 }

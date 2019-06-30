@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <assert.h>
 #include "CuTest.h"
 #include "msm.h"
 #include "msm_tests.h"
@@ -79,6 +80,64 @@ static struct ds_node dn_foo = {
 	.name		= "foo",
 };
 
+struct all_data {
+	objpool_t *barpl;
+	objpool_t *foopl;
+};
+
+struct all_data global_ad = {0};
+
+unsigned int ad_getlen(struct ds_node *dn)
+{
+	return sizeof(struct all_data);
+}
+
+void *ad_enc_detail(struct ds_node *dn, char *dst)
+{
+	struct all_data *ad = (struct all_data *)dn->pool_pt; /* original ad */
+	struct ser_sum_entry *sse = dn->sered_sum;
+
+	/* must set dn->sered_detail and sse->sse_len */
+	dn->sered_detail = dst;
+	void *dend = msm_ser(dst, ad, sizeof(struct all_data), true);
+	sse->sse_len = (char *)dend - dst;
+
+	struct all_data *sered_ad = (struct all_data *)dn->sered_detail;
+	sered_ad->barpl = (objpool_t *)(ad->barpl)->pool_id; /* old id */
+	sered_ad->foopl = (objpool_t *)(ad->foopl)->pool_id; /* old id */
+
+	return dend;
+}
+
+void *ad_dec_detail_high(struct ds_node *dn, char *src)
+{
+	struct all_data *sered_ad = (struct all_data  *)src;
+	struct all_data *ad = (struct all_data *)dn->pool_pt; /* original ad */
+
+	/* just deser firstly, and then do patching in *_detail_low() */
+	assert(dn->pool_type>=PT_NOP);
+	return msm_deser((void *)src, (void *)ad, sizeof(struct all_data), true);
+}
+
+void ad_dec_detail_low(struct ds_node *dn)
+{
+	struct ser_root_data *srd = dn->srd;
+	struct all_data *ad = (struct all_data *)dn->pool_pt; /* original ad */
+	struct all_data *sered_ad = (struct all_data *)dn->sered_detail;
+
+	/* get new pool ptr */
+	ad->barpl = (objpool_t *)get_new_pool_pt(srd, (int)sered_ad->barpl);
+	ad->foopl = (objpool_t *)get_new_pool_pt(srd, (int)sered_ad->foopl);
+}
+
+static struct ds_node dn_ad = {
+	.name		= "adata",
+	.get_len	= ad_getlen,
+	.enc_detail	= ad_enc_detail,
+	.dec_detail_high	= ad_dec_detail_high,
+	.dec_detail_low		= ad_dec_detail_low,
+};
+
 void test_msm_objpool(CuTest *tc)
 {
 	printf("test msm()...\n");
@@ -88,9 +147,13 @@ void test_msm_objpool(CuTest *tc)
 	bar_opl = create_objpool(sizeof(struct bar), OBJP_M_NEEDID, &bar_oops);
 	foo_opl = create_objpool(sizeof(struct foo), OBJP_M_NEEDID, &foo_oops);
 
+	global_ad.barpl = bar_opl;
+	global_ad.foopl = foo_opl;
+
 	struct ser_root_data *srd = msm_get();
 	msm_register_ds(srd, &dn_bar, PT_OBJP, (void *)bar_opl);
 	msm_register_ds(srd, &dn_foo, PT_OBJP, (void *)foo_opl);
+	msm_register_ds(srd, &dn_ad, PT_NOP, (void *)&global_ad);
 
 	int i;
 	void *new;
@@ -187,6 +250,10 @@ void test_msm_objpool(CuTest *tc)
 
 	objpool_free(bar_opl2, pnewb);
 	objpool_free(foo_opl2, pnewf);
+
+	/* test ptr in all_data */
+	CuAssertPtrEquals(tc, bar_opl2, global_ad.barpl);
+	CuAssertPtrEquals(tc, foo_opl2, global_ad.foopl);
 
 	msm_put(srd);
 }
