@@ -22,7 +22,7 @@ struct objvec *objv_init(unsigned int osize, objctor ctor, void *arg, objdtor dt
 	unsigned lcm = LCM(osize, 4);
 	unsigned need_slots = (MAX_TRUNK_SIZE-(MIN_NODE_SIZE<<2)) / lcm;
 	need_slots = (need_slots*lcm) >> 2;
-	if ((ret=cvsp_init(&ov->cp, need_slots)) != 0)
+	if ((ret=cvsp_init(&ov->cp, need_slots, CVSP_M_AUTOEX)) != 0)
 		ERROR("cvsp_init() failure...\n");
 
 	ov->size = osize;

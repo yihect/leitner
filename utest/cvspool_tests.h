@@ -15,6 +15,7 @@ void test_slots_num_adjust(CuTest *tc);
 void test_init_cvspool(CuTest *tc);
 void test_alloc1_cvspool(CuTest *tc);
 void test_alloc2_cvspool(CuTest *tc);
+void test_alloc3_cvspool(CuTest *tc);	/* test adding new trunk */
 void test_free_cvspool(CuTest *tc);
 
 

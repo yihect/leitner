@@ -4,6 +4,42 @@
 #include "util.h"
 #include "cvspool.h"
 
+/*
+ *   cvspool
+ * +-----------+
+ * |           |
+ * |           |       trunk1              trunk2
+ * |trunk_list |--->+----------+   +--->+----------+   +--> NULL
+ * +-----------+    |          |   |    |          |   |
+ *                  |          |   |    |          |   |
+ *            +-----|mem       |   |    |mem       |   |
+ *            |  +--|free_head |   |    |free_head |   |
+ *            |  |  |next      |---+    |next      |---+
+ *            |  |  +----------+        +----------+
+ *            |  |
+ *            +--+->+--------------+
+ *               +>>|  1st fnode   |==+    *Note: the fnode list is constructed:
+ *               ^  |--------------|  |	    1, take blk_idx/in_blk_offset as
+ *               ^  |XXXXXXXXXXXXXX|  |        prev/next pointer;
+ *               ^  |XXXXXXXXXXXXXX|  |     2, is a circular list.
+ *               +<<|              |<=+     3, max size of fnode is MAX_BLK_SIZE
+ *             +>>>>|  2nd fnode   |==+
+ *             ^    |XXXXXXXXXXXXXX|  |
+ *             ^    |XXXXXXXXXXXXXX|  |
+ *             ^    |X BUSY FNODE X|  |
+ *             ^    |XXXXXXXXXXXXXX|  |
+ *             +<<<<|              |<=+
+ *                  |  3rd fnode   |
+ *               +>>|              |==+
+ *               ^  |XXXXXXXXXXXXXX|  |
+ *               ^  |XXXXXXXXXXXXXX|  |
+ *               ^  |XXXXXXXXXXXXXX|  |
+ *               +<<|              |<=+
+ *                  |  4th fnode   |
+ *                  +--------------+
+ *
+ */
+
 /* save slot count into fnode0/fnode1 */
 void set_fnode_len(cvspool_fnode0 *fn0, unsigned int len)
 {
@@ -114,8 +150,7 @@ unsigned int slots_num_adjust(unsigned int slots_num)
 	}
 
 	/* make sure there are MIN_NODE_SIZE slots in a block/trunk */
-	if ((slots_num < MIN_NODE_SIZE) && (slots_num % MIN_NODE_SIZE))
-	{
+	if ((slots_num < MIN_NODE_SIZE) && (slots_num % MIN_NODE_SIZE)) {
 		slots_num += (MIN_NODE_SIZE - (slots_num % MIN_NODE_SIZE));
 		return slots_num;
 	}
@@ -128,13 +163,33 @@ unsigned int slots_num_adjust(unsigned int slots_num)
 	return slots_num;
 }
 
+void add_new_trunk(cvspool *sp, unsigned int t_slot_size)
+{
+	cvspool_trunk *ptrunk = NULL;
+	assert(sp->trunk_list != NULL);
+
+	ptrunk = (cvspool_trunk *)malloc(sizeof(cvspool_trunk));
+	if (ptrunk == NULL) return ptrunk;
+
+	cvsp_init_trunk(ptrunk, t_slot_size);
+
+	ptrunk->next = sp->trunk_list;
+	sp->trunk_list = ptrunk;
+	sp->total += t_slot_size;
+	sp->trunk_cnt++;
+
+	return ptrunk;
+}
+
 /* total length of the pool is 4Bytes*slots_num */
-int cvsp_init(cvspool **cvsp, unsigned int slots_num)
+int cvsp_init(cvspool **cvsp, unsigned int slots_num, unsigned int mode)
 {
 	assert(cvsp != 0);
 	cvspool *sp = (cvspool *)malloc(sizeof(cvspool));
 	if (sp == NULL) goto out1;
 	sp->trunk_list = NULL;
+	sp->trunk_cnt = 0;
+	sp->mode = mode;
 
 	/* we need make sure there are 3 slots at lease in the last free block */
 	slots_num = slots_num_adjust(slots_num);
@@ -158,6 +213,7 @@ int cvsp_init(cvspool **cvsp, unsigned int slots_num)
 		prev_trunk = ptrunk;
 
 		tremain -= (tsize>>2);
+		sp->trunk_cnt++;
 	} while (tremain > 0);
 
 	*cvsp = sp;
@@ -198,16 +254,31 @@ char *cvsp_alloc(cvspool *cvsp, unsigned int size)
 	assert(cvsp != 0);
 	if (cvsp->used == cvsp->total) {
 		PINFO("cvspool is full.");
-		return NULL;
+		if (cvsp->mode & CVSP_M_AUTOEX)
+			/* take the 1st trunk as a template */
+			add_new_trunk(cvsp, cvsp->trunk_list->t_total);
+		else
+			return NULL;
 	}
 
 	/* There are 4Bytes for meta data in busy node.
 	 * And a busy node occupies 3 slots at least. */
 	unsigned int need_slots = MAX(((size+4+3)>>2), MIN_NODE_SIZE);
-	assert(need_slots <= (MAX_BLK_SIZE>>2));
+	assert(need_slots+1 <= (MAX_BLK_SIZE>>2));
+
+	/* no way to alloc buf of size longer than the larger of 1st trunk's size
+	 * and max_size of a block. Since the above assertion can exclude the
+	 * first case, here we need just to think about the 2nd one.
+	 * (take 4Bytes meta of busy node into account) */
+	if (need_slots+1 > cvsp->trunk_list->t_total) {
+		PINFO("too much allocation.");
+		return NULL;
+	}
 
 	cvspool_fnode0 *pfn=NULL;
-	cvspool_trunk *t = cvsp->trunk_list;
+	cvspool_trunk *t = NULL;
+
+RESCAN: t = cvsp->trunk_list;
 	while (t) {
 		assert(t->mem != 0);
 		for_each_fnode(t, &pfn) {
@@ -223,7 +294,13 @@ char *cvsp_alloc(cvspool *cvsp, unsigned int size)
 
 	if (!pfn || !t) {
 		PINFO("there is no free node large enough in cvspool.");
-		return NULL;
+		if (cvsp->mode & CVSP_M_AUTOEX) {
+			/* take the 1st trunk as a template */
+			add_new_trunk(cvsp, cvsp->trunk_list->t_total);
+			goto RESCAN;
+		}
+		else
+			return NULL;
 	}
 
 	cvspool_fnode0 *prev_pfn=NULL, *next_pfn=NULL;
@@ -352,5 +429,4 @@ void cvsp_free(cvspool *cvsp, char *str)
 	t->t_used -= pbn_len;
 	cvsp->used -= pbn_len;
 }
-
 

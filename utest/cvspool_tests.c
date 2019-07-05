@@ -11,6 +11,7 @@ CuSuite* cvspool_getsuite()
 	SUITE_ADD_TEST(suite, test_init_cvspool);
 	SUITE_ADD_TEST(suite, test_alloc1_cvspool);
 	SUITE_ADD_TEST(suite, test_alloc2_cvspool);
+	SUITE_ADD_TEST(suite, test_alloc3_cvspool);
 	SUITE_ADD_TEST(suite, test_free_cvspool);
 	return suite;
 }
@@ -89,7 +90,7 @@ void test_init_cvspool(CuTest *tc)
 	cvspool_trunk *t = NULL;
 
 	/* 1st, init a cvspool with size of 4096Slots*4=16KBytes */
-	if ((ret=cvsp_init(&cp, 4096)) != 0)
+	if ((ret=cvsp_init(&cp, 4096, CVSP_M_AUTOEX)) != 0)
 		printf("cvsp_init() failure...\n");
 
 	CuAssertPtrNotNull(tc, cp);
@@ -122,7 +123,7 @@ void test_init_cvspool(CuTest *tc)
 
 	/* 2nd, init a cvspool with size of (2^17+20)Slots*4=(512K+80)Bytes
 	 * so, the free list is(node len with slots): 0<-64K-3=64K=20+3->0 */
-	if ((ret=cvsp_init(&cp, 128*1024+20)) != 0)
+	if ((ret=cvsp_init(&cp, 128*1024+20, CVSP_M_AUTOEX)) != 0)
 		printf("cvsp_init() failure...\n");
 
 	CuAssertPtrNotNull(tc, cp);
@@ -172,7 +173,7 @@ void test_init_cvspool(CuTest *tc)
 
 	/* 3rd, init a cvspool with size of (2^16-3)Slots*4=(64K*4-12)Bytes
 	 * so, the free list is(node len with slots): 0<-64K-3->0 */
-	if ((ret=cvsp_init(&cp, 64*1024-3)) != 0)
+	if ((ret=cvsp_init(&cp, 64*1024-3, CVSP_M_AUTOEX)) != 0)
 		printf("cvsp_init() failure...\n");
 
 	CuAssertPtrNotNull(tc, cp);
@@ -192,7 +193,7 @@ void test_init_cvspool(CuTest *tc)
 
 	/* 4th, init a cvspool with size of (2^16-4)Slots*4=(64K*4-16)Bytes
 	 * so, the free list is(node len with slots): 0<-64K-4->0 */
-	if ((ret=cvsp_init(&cp, 64*1024-4)) != 0)
+	if ((ret=cvsp_init(&cp, 64*1024-4, CVSP_M_AUTOEX)) != 0)
 		printf("cvsp_init() failure...\n");
 
 	CuAssertPtrNotNull(tc, cp);
@@ -212,7 +213,7 @@ void test_init_cvspool(CuTest *tc)
 
 	/* 5th, init a cvspool with size of (2^16-2)Slots*4=(64K*4-8)Bytes
 	 * so, the free list is(node len with slots): 0<-64K-3=3->0 */
-	if ((ret=cvsp_init(&cp, 64*1024-2)) != 0)
+	if ((ret=cvsp_init(&cp, 64*1024-2, CVSP_M_AUTOEX)) != 0)
 		printf("cvsp_init() failure...\n");
 
 	CuAssertPtrNotNull(tc, cp);
@@ -250,7 +251,7 @@ void test_init_cvspool(CuTest *tc)
 
 	/* 6th, init a cvspool with size of (2^16)Slots*4=(64K*4)Bytes
 	 * so, the free list is(node len with slots): 0<-64K-3=3->0 */
-	if ((ret=cvsp_init(&cp, 64*1024-2)) != 0)
+	if ((ret=cvsp_init(&cp, 64*1024-2, CVSP_M_AUTOEX)) != 0)
 		printf("cvsp_init() failure...\n");
 
 	CuAssertPtrNotNull(tc, cp);
@@ -288,7 +289,7 @@ void test_init_cvspool(CuTest *tc)
 
 	/* 7th, init a cvspool with size of (2)Slots*4=(2*4)Bytes
 	 * so, the free list is(node len with slots): 0<-3->0 */
-	if ((ret=cvsp_init(&cp, 2)) != 0)
+	if ((ret=cvsp_init(&cp, 2, CVSP_M_AUTOEX)) != 0)
 		printf("cvsp_init() failure...\n");
 
 	CuAssertPtrNotNull(tc, cp);
@@ -312,7 +313,7 @@ void test_init_cvspool(CuTest *tc)
 	 *	trunk0:	0<-64k-3=64k=64k=64k=...=64k->0, totally 16 Blocks
 	 *	trunk1:	0<-64k-3=64k=64k=64k=...=64k->0, totally 16 Blocks
 	 *	trunk2:	0<-3->0 */
-	if ((ret=cvsp_init(&cp, 2*16*64*1024-4)) != 0)
+	if ((ret=cvsp_init(&cp, 2*16*64*1024-4, CVSP_M_AUTOEX)) != 0)
 		printf("cvsp_init() failure...\n");
 
 	CuAssertPtrNotNull(tc, cp);
@@ -389,7 +390,7 @@ void test_alloc1_cvspool(CuTest *tc)
 
 	int ret;
 	cvspool *cp=NULL;
-	if ((ret=cvsp_init(&cp, 4096)) != 0)
+	if ((ret=cvsp_init(&cp, 4096, CVSP_M_AUTOEX)) != 0)
 		printf("cvsp_init() failure...\n");
 
 	/* "normal": alloc 12 Bytes */
@@ -475,7 +476,7 @@ void test_alloc2_cvspool(CuTest *tc)
 	int block_cnt=0, total_fslot_cnt=0;
 
 	/* build a tunck size of nearly n*block_size-m */
-	if ((ret=cvsp_init(&cp, 1*64*1024-5)) != 0)
+	if ((ret=cvsp_init(&cp, 1*64*1024-5, CVSP_M_AUTOEX)) != 0)
 		printf("cvsp_init() failure...\n");
 	block_cnt=0, total_fslot_cnt=0;
 	for_each_fnode_cp(cp, &t, &pfn) {
@@ -488,7 +489,7 @@ void test_alloc2_cvspool(CuTest *tc)
 	cvsp_destroy(cp);
 
 	/* another n*block_size-m */
-	if ((ret=cvsp_init(&cp, 1*64*1024-4)) != 0)
+	if ((ret=cvsp_init(&cp, 1*64*1024-4, CVSP_M_AUTOEX)) != 0)
 		printf("cvsp_init() failure...\n");
 
 	block_cnt=0, total_fslot_cnt=0;
@@ -502,7 +503,7 @@ void test_alloc2_cvspool(CuTest *tc)
 	cvsp_destroy(cp);
 
 	/* another n*block_size-3 */
-	if ((ret=cvsp_init(&cp, 1*64*1024-3)) != 0)
+	if ((ret=cvsp_init(&cp, 1*64*1024-3, CVSP_M_AUTOEX)) != 0)
 		printf("cvsp_init() failure...\n");
 
 	block_cnt=0, total_fslot_cnt=0;
@@ -516,6 +517,56 @@ void test_alloc2_cvspool(CuTest *tc)
 	cvsp_destroy(cp);
 }
 
+/* test adding new trunk */
+void test_alloc3_cvspool(CuTest *tc)
+{
+	printf("test_alloc3_cvspool() testing...\n");
+
+	int ret;
+	cvspool *cp=NULL;
+	cvspool_fnode0 *pfn = NULL;
+	cvspool_trunk *t = NULL;
+	int block_cnt=0, total_fslot_cnt=0;
+
+	/* build a tunck size of 1024 slots */
+	if ((ret=cvsp_init(&cp, 1024, CVSP_M_AUTOEX)) != 0)
+		printf("cvsp_init() failure...\n");
+	block_cnt=0, total_fslot_cnt=0;
+	for_each_fnode_cp(cp, &t, &pfn) {
+		//printf("pfn: %lx, len:%lx, @trunk: %lx\n", (unsigned long)pfn, get_fnode_len(pfn), t);
+		block_cnt++;
+		total_fslot_cnt += get_fnode_len(pfn);
+	}
+	CuAssertIntEquals(tc, 1, block_cnt);	//  1 blocks
+	CuAssertIntEquals(tc, 1024, total_fslot_cnt);
+
+
+	/* try allocating buf... */
+	char *buf768 = cvsp_alloc(cp, 768*4);
+	CuAssertPtrNotNull(tc, buf768);
+
+	t = NULL; pfn = NULL;
+	for_each_fnode_cp(cp, &t, &pfn) {
+		//printf("pfn: %lx, len:%lx, @trunk: %lx\n", (unsigned long)pfn, get_fnode_len(pfn), t);
+		block_cnt++;
+		total_fslot_cnt += get_fnode_len(pfn);
+	}
+
+	char *buf512 = cvsp_alloc(cp, 512*4);
+	CuAssertPtrNotNull(tc, buf512);
+
+	t = NULL; pfn = NULL;
+	for_each_fnode_cp(cp, &t, &pfn) {
+		//printf("pfn: %lx, len:%lx, @trunk: %lx\n", (unsigned long)pfn, get_fnode_len(pfn), t);
+		block_cnt++;
+		total_fslot_cnt += get_fnode_len(pfn);
+	}
+
+	cvsp_free(cp, buf768);
+	cvsp_free(cp, buf512);
+
+	cvsp_destroy(cp);
+}
 
 void test_free_cvspool(CuTest *tc)
 {
@@ -523,7 +574,7 @@ void test_free_cvspool(CuTest *tc)
 
 	int ret;
 	cvspool *cp=NULL;
-	if ((ret=cvsp_init(&cp, 4096)) != 0)
+	if ((ret=cvsp_init(&cp, 4096, CVSP_M_AUTOEX)) != 0)
 		printf("cvsp_init() failure...\n");
 
 	cvspool_trunk *t = cp->trunk_list;

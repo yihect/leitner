@@ -26,6 +26,9 @@
 /* Turnning on this will increase mem usage in busy node */
 //#define CVSP_DEBUG
 
+/* cvspool modes (external) */
+#define CVSP_M_AUTOEX	(1<<0)	// auto expand ??
+
 /* for linking free nodes, 8Bytes long at minimal.
  * max size of 64K*4=256KBytes for a free node due to len's type u_int_16 */
 typedef struct cvspool_free_node0 {
@@ -73,6 +76,8 @@ typedef struct cvspool_trunk_s {
 typedef struct cvs_pool {
 	u_int32_t total;	// in slots
 	u_int32_t used;			// inited with 0
+	unsigned int mode;
+	unsigned int trunk_cnt;
 	cvspool_trunk *trunk_list;
 } cvspool;
 
@@ -111,7 +116,7 @@ int get_fnode_len(cvspool_fnode0 *fn0);
 
 unsigned int get_bnode_mem_len(cvspool *cvsp, char *mem);
 
-int cvsp_init(cvspool **cvsp, unsigned int slots_num);
+int cvsp_init(cvspool **cvsp, unsigned int slots_num, unsigned int mode);
 void cvsp_destroy(cvspool *cvsp);
 
 char *cvsp_alloc(cvspool *cvsp, unsigned int size);
