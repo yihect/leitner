@@ -3,40 +3,45 @@
 #include <assert.h>
 #include "util.h"
 #include "cvspool.h"
+#include "list.h"
 
 /*
- *   cvspool
- * +-----------+
- * |           |
- * |           |       trunk1              trunk2
- * |trunk_list |--->+----------+   +--->+----------+   +--> NULL
- * +-----------+    |          |   |    |          |   |
- *                  |          |   |    |          |   |
- *            +-----|mem       |   |    |mem       |   |
- *            |  +--|free_head |   |    |free_head |   |
- *            |  |  |next      |---+    |next      |---+
- *            |  |  +----------+        +----------+
- *            |  |
- *            +--+->+--------------+
- *               +>>|  1st fnode   |==+    *Note: the fnode list is constructed:
- *               ^  |--------------|  |	    1, take blk_idx/in_blk_offset as
- *               ^  |XXXXXXXXXXXXXX|  |        prev/next pointer;
- *               ^  |XXXXXXXXXXXXXX|  |     2, is a circular list.
- *               +<<|              |<=+     3, max size of fnode is MAX_BLK_SIZE
- *             +>>>>|  2nd fnode   |==+
- *             ^    |XXXXXXXXXXXXXX|  |
- *             ^    |XXXXXXXXXXXXXX|  |
- *             ^    |X BUSY FNODE X|  |
- *             ^    |XXXXXXXXXXXXXX|  |
- *             +<<<<|              |<=+
- *                  |  3rd fnode   |
- *               +>>|              |==+
- *               ^  |XXXXXXXXXXXXXX|  |
- *               ^  |XXXXXXXXXXXXXX|  |
- *               ^  |XXXXXXXXXXXXXX|  |
- *               +<<|              |<=+
- *                  |  4th fnode   |
- *                  +--------------+
+ *  +-----------------------------------------------------------------+
+ *  |     cvspool						      |
+ *  |  +-----------+                                                  |
+ *  |  |           |                                                  |
+ *  |  |           |       trunk1              trunk2                 |
+ *  |  |trunk_list |--->+----------+   +--->+----------+   +--> NULL  |
+ *  +--|btrunk_list|    |          |   |    |          |   |          |
+ *     +-----------+    |          |   |    |          |   |          |
+ *                      |          |   |    |          |   |          |
+ *           +----------|mem       |   |    |mem       |   |          |
+ *           |  +-------|free_head |   |    |free_head |   |          |
+ *           |  |       |next o<-+ |---+    |next o<-+ |---+          |
+ *           |  |   +---|pprev   +-|--------|pprev   +-|--------------+
+ *           |  |   |   +----------+        +----------+
+ *           |  |   +-----> NULL
+ *           +--+------>+--------------+
+ *                      |  1st fnode   |
+ *                   +>>|  as header   |==+    *Note: the fnode list is constructed:
+ *                   ^  |--------------|  |	1, take blk_idx/in_blk_offset as
+ *                   ^  |XXXXXXXXXXXXXX|  |        prev/next pointer;
+ *                   ^  |XXXXXXXXXXXXXX|  |     2, is a circular list.
+ *                   +<<|              |<=+     3, max size of fnode is MAX_BLK_SIZE
+ *                 +>>>>|  2nd fnode   |==+
+ *                 ^    |XXXXXXXXXXXXXX|  |
+ *                 ^    |XXXXXXXXXXXXXX|  |
+ *                 ^    |X  BUSY-NODE X|  |
+ *                 ^    |XXXXXXXXXXXXXX|  |
+ *                 +<<<<|              |<=+
+ *                      |  3rd fnode   |
+ *                   +>>|              |==+
+ *                   ^  |XXXXXXXXXXXXXX|  |
+ *                   ^  |XXXXXXXXXXXXXX|  |
+ *                   ^  |XXXXXXXXXXXXXX|  |
+ *                   +<<|              |<=+
+ *                      |  4th fnode   |
+ *                      +--------------+
  *
  */
 
@@ -76,7 +81,8 @@ int cvsp_init_trunk(cvspool_trunk *t, u_int32_t tslots_cnt)
 {
 	int poollen = tslots_cnt<<2;
 	if (poollen < MIN_NODE_SIZE)  return -1;
-	t->mem = (char *)malloc(poollen + (MIN_NODE_SIZE<<2));
+	t->t_total_mem = poollen + (MIN_NODE_SIZE<<2);
+	t->mem = (char *)malloc(t->t_total_mem);
 	if (t->mem == NULL) {
 		return -1;
 	}
@@ -85,6 +91,7 @@ int cvsp_init_trunk(cvspool_trunk *t, u_int32_t tslots_cnt)
 	 * Never allocate mem from the first free node */
 	t->next = NULL;
 	t->t_used = 0;
+	t->pprev = NULL;
 	t->t_total = tslots_cnt;
 	t->free_head = (cvspool_fnode0 *)t->mem;
 	t->free_head->idx = PNBLKIDX(0,0);	// init the head directory
@@ -163,7 +170,7 @@ unsigned int slots_num_adjust(unsigned int slots_num)
 	return slots_num;
 }
 
-void add_new_trunk(cvspool *sp, unsigned int t_slot_size)
+cvspool_trunk *add_new_trunk(cvspool *sp, unsigned int t_slot_size)
 {
 	cvspool_trunk *ptrunk = NULL;
 	assert(sp->trunk_list != NULL);
@@ -173,10 +180,15 @@ void add_new_trunk(cvspool *sp, unsigned int t_slot_size)
 
 	cvsp_init_trunk(ptrunk, t_slot_size);
 
+	sp->trunk_list->pprev = &ptrunk->next;
 	ptrunk->next = sp->trunk_list;
 	sp->trunk_list = ptrunk;
 	sp->total += t_slot_size;
-	sp->trunk_cnt++;
+	sp->total_mem += ptrunk->t_total_mem;
+	sp->total_mem += sizeof(cvspool_trunk);
+
+	/* trunk id, count from zero, trunk_cnt steps up from trunk_ocnt's value */
+	ptrunk->id = sp->trunk_cnt++;
 
 	return ptrunk;
 }
@@ -187,9 +199,17 @@ int cvsp_init(cvspool **cvsp, unsigned int slots_num, unsigned int mode)
 	assert(cvsp != 0);
 	cvspool *sp = (cvspool *)malloc(sizeof(cvspool));
 	if (sp == NULL) goto out1;
-	sp->trunk_list = NULL;
-	sp->trunk_cnt = 0;
+
+	memset(sp, 0, sizeof(cvspool));
 	sp->mode = mode;
+
+	/* need id when cvspool ptr is saved in objs of another type */
+	if (sp->mode & CVSP_M_NEEDID) {
+		struct ser_root_data *srd = msm_get_no_ref();
+		sp->pool_id = idr_alloc(&srd->poolidr, sp, POOLID_MIN, POOLID_MID-1);
+		sp->trunk_idr = malloc(sizeof(struct idr));
+		idr_init(sp->trunk_idr);
+	}
 
 	/* we need make sure there are 3 slots at lease in the last free block */
 	slots_num = slots_num_adjust(slots_num);
@@ -208,14 +228,20 @@ int cvsp_init(cvspool **cvsp, unsigned int slots_num, unsigned int mode)
 		int tsize = MIN((MAX_TRUNK_SIZE-(MIN_NODE_SIZE<<2)), (tremain<<2));
 		cvsp_init_trunk(ptrunk, tsize>>2);
 
-		if (prev_trunk != NULL)
+		if (prev_trunk != NULL) {
 			prev_trunk->next = ptrunk;
+			ptrunk->pprev = &prev_trunk->next;
+		}
 		prev_trunk = ptrunk;
 
 		tremain -= (tsize>>2);
-		sp->trunk_cnt++;
+		ptrunk->id = sp->trunk_ocnt++; /* trunk id, count from zero */
+		sp->total_mem += ptrunk->t_total_mem;
+		sp->total_mem += sizeof(cvspool_trunk);
+		sp->btrunk_list = &ptrunk->next;
 	} while (tremain > 0);
 
+	sp->trunk_cnt = sp->trunk_ocnt; /* after this, maintain trunk cnt in trunk_cnt */
 	*cvsp = sp;
 	return 0;
 
@@ -243,6 +269,14 @@ void cvsp_destroy(cvspool *cvsp)
 
 		free((void *)pt);
 	}
+
+	if (cvsp->mode & CVSP_M_NEEDID) {
+		struct ser_root_data *srd = msm_get_no_ref();
+		idr_remove(&srd->poolidr, cvsp->pool_id);
+		idr_destroy(cvsp->trunk_idr);
+		free(cvsp->trunk_idr);
+		cvsp->trunk_idr = NULL;
+	}
 	free((void *)cvsp);
 
 	return;
@@ -264,14 +298,15 @@ char *cvsp_alloc(cvspool *cvsp, unsigned int size)
 	/* There are 4Bytes for meta data in busy node.
 	 * And a busy node occupies 3 slots at least. */
 	unsigned int need_slots = MAX(((size+4+3)>>2), MIN_NODE_SIZE);
-	assert(need_slots+1 <= (MAX_BLK_SIZE>>2));
+	//assert(need_slots+1 <= (MAX_BLK_SIZE>>2));
+	assert(need_slots <= (MAX_BLK_SIZE>>2));
 
 	/* no way to alloc buf of size longer than the larger of 1st trunk's size
 	 * and max_size of a block. Since the above assertion can exclude the
 	 * first case, here we need just to think about the 2nd one.
 	 * (take 4Bytes meta of busy node into account) */
-	if (need_slots+1 > cvsp->trunk_list->t_total) {
-		PINFO("too much allocation.");
+	if (need_slots > cvsp->trunk_list->t_total) {
+		PINFO("too much of allocation.");
 		return NULL;
 	}
 
@@ -330,21 +365,125 @@ RESCAN: t = cvsp->trunk_list;
 	return (char *)(pbn0+1);
 }
 
+/* get trunk ptr of a node in this pool */
 cvspool_trunk *get_trunk(cvspool *cvsp, char *str)
 {
-	cvspool_trunk *t = cvsp->trunk_list;
+	/* optimize with some trunk ptr cache */
+	cvspool_trunk *t = cvsp->cached_trunk;
+	if ((t!=NULL) &&
+	   ((t->mem<=str) && (str<(t->mem+t->t_total_mem))))
+		return t;
+
+	/* search the trunk */
+	t = cvsp->trunk_list;
 	while (t) {
 		assert(t->mem != 0);
 
 		/* found our trunk */
-		if ((t->mem<=str) && (str<=(t->mem+MAX_TRUNK_SIZE)))
+		if ((t->mem<=str) && (str<(t->mem+MAX_TRUNK_SIZE)))
 			break;
 
 		t = t->next;
 	}
 
 	assert(t != NULL);
+	cvsp->cached_trunk = t;
 	return t;
+}
+
+cvspool_trunk *get_trunk_by_id(cvspool *cvsp, unsigned tid)
+{
+	cvspool_trunk *t = cvsp->cached_trunk;
+	if ((t!=NULL) && (t->id==tid))
+		return t;
+
+	/* search the trunk */
+	t = cvsp->trunk_list;
+	while (t) {
+		/* found our trunk */
+		if (t->id == tid)
+			break;
+
+		t = t->next;
+	}
+
+	assert(t != NULL);
+	cvsp->cached_trunk = t;
+	return t;
+}
+
+unsigned long id_of_node(cvspool *cvsp, char *str)
+{
+	union node_id nid = {0};
+	cvspool_trunk *t = get_trunk(cvsp, str);
+
+	nid.s.pool = cvsp->pool_id;
+	nid.s.trunk = t->id;
+	nid.s.slot = (str-t->mem)>>2;
+
+	return nid.l;
+}
+
+/* Get node from the desered/original cvspool, the poolid in id param is
+ * poolid of either desered or sered cvspool. If the id param is of sered pool,
+ * this function must be called in the context of *_deser_low() */
+char *node_from_id(cvspool *cvsp, unsigned long id)
+{
+	union node_id nid = {0};
+
+	nid.l = id;
+
+	struct ser_root_data *srd = msm_get_no_ref();
+	unsigned desered_poolid = idr_find(&srd->ididr, nid.s.pool);
+	assert(cvsp && ((cvsp->pool_id == nid.s.pool)
+			||(cvsp->pool_id == desered_poolid)));
+
+	cvspool_trunk *t = get_trunk_by_id(cvsp, nid.s.trunk);
+	assert(t != NULL);
+
+	return (char *)(t->mem + (nid.s.slot<<2));
+}
+
+/* get a busy node ptr a time, must be called while iteration, such as while or
+ * for loop */
+char *iter_bnode(cvspool_trunk *t)
+{
+	static char *tmp = NULL;
+	if (t->t_used == 0) return NULL;
+
+	if (tmp == NULL)
+		tmp = t->mem;
+	else	/* have found a bnode in the last call */
+		tmp += ((((cvspool_bnode0 *)tmp)->len_1+1)<<2);
+	while ((cvspool_bnode0 *)tmp < (t->mem + (t->t_total<<2))) {
+	        if (((cvspool_bnode0 *)tmp)->g0 == BUSY_GUARD0)
+			break;
+		tmp += ((((cvspool_bnode0 *)tmp)->len_1+1)<<2);
+	}
+
+	if ((cvspool_bnode0 *)tmp >= (t->mem + (t->t_total<<2))) {
+		tmp = NULL;
+		return NULL;
+	}
+
+	/* bnode content pointer */
+	return tmp+sizeof(cvspool_bnode0);
+}
+
+/* do something for every busy node
+ * @fn: function to be called for each busy node
+ * @data: data passed back to callback function
+ */
+void cvsp_for_each_bnode(cvspool *cvsp, int (*fn)(void *p, void *data), void *data)
+{
+	char *pobj = NULL;
+	cvspool_trunk *t = NULL;
+
+	assert(fn != NULL);
+	for_each_trunk(cvsp, &t) {
+		while ((pobj=iter_bnode(cvsp->trunk_list)) != NULL)
+			fn(pobj, data);
+	}
 }
 
 /* get usable memory size of a busy node, in bytes */
@@ -430,3 +569,127 @@ void cvsp_free(cvspool *cvsp, char *str)
 	cvsp->used -= pbn_len;
 }
 
+unsigned int cvspool_ser_getlen(struct ser_root_data *srd, void *mpl)
+{
+	unsigned int len = 0;
+	cvspool *cvsp = (cvspool *)mpl;
+
+	len += sizeof(cvspool);
+	len += cvsp->total_mem;
+
+	return len;
+}
+
+char *cvspool_ser(struct ser_root_data *srd, void *mpl, char *dst)
+{
+	void *dv = dst;
+	cvspool *cvspl = (cvspool *)mpl;
+
+	/* 1st, serring all data */
+	cvspool *sered_cvspl = (cvspool *)dst;
+	dv = msm_ser(dv, (void *)cvspl, sizeof(cvspool), true);
+
+	int i=0;
+	cvspool_trunk *pt = cvspl->trunk_list;
+	while (pt) {
+		/* for simply desering, we firstly do sering trunk's memory */
+		dv = msm_ser(dv, (void *)pt->mem, pt->t_total_mem, true);
+
+		/* and then do sering trunk itself */
+		dv = msm_ser(dv, (void *)pt, sizeof(cvspool_trunk), true);
+
+		pt = pt->next;
+	}
+
+	return dv;
+}
+
+/* get next(aka. the prev trunk) trunk to deser every time.
+ * NOTE: because static variable used here, this function shoule be called like:
+ *
+ * while(!prev_trunk()) {
+ *    do_something(...);
+ * }
+ *
+ * Namely, we must iterate all trunks in a pool, so the static pt pointer has a
+ * chance to be NULL. */
+cvspool_trunk *prev_trunk(cvspool *p)
+{
+	assert(p != NULL);
+	assert(p->btrunk_list != NULL);
+	static cvspool_trunk *pt = NULL;
+
+	if (pt == NULL) {
+		pt = container_of(p->btrunk_list, cvspool_trunk, next);
+	}else {
+		if (pt->pprev == NULL) {
+			pt = NULL;
+			return NULL;
+		}
+		pt = container_of(pt->pprev, cvspool_trunk, next);
+	}
+
+	return pt;
+}
+
+char *cvspool_deser_high(struct ser_root_data *srd, void *mpl, char *src)
+{
+	void *dv = src;
+	assert(mpl != NULL);
+
+	/* deserring and repatching */
+	cvspool *sered_cvspl = (cvspool *)src;
+	/* here, we may use msm_deser() to deser pool type, but must note
+	 * NOT to corrupt the data in dest pool */
+	dv = msm_deser((void *)dv, (void *)mpl, sizeof(cvspool), false);
+
+	char *pt, *saved_pt;
+	cvspool_trunk *next_trunk=NULL, *new_trunk=NULL;
+
+	/* total_mem has include sizeof(cvspool_trunk) */
+	pt = saved_pt = (char *)dv + sered_cvspl->total_mem;
+
+	int i=0;
+	while (i < sered_cvspl->trunk_cnt) {
+		cvspool_trunk *cur_t = (cvspool_trunk *)(pt-sizeof(cvspool_trunk));
+		if (i < sered_cvspl->trunk_ocnt)
+			new_trunk = prev_trunk((cvspool *)mpl);
+		else {
+			/* for correct work of next pool, we must do an extra
+			 * call of perv_trunk() function here */
+			if (i == sered_cvspl->trunk_ocnt) {
+				cvspool_trunk *tmp = prev_trunk((cvspool *)mpl);
+				assert(tmp == NULL);
+			}
+
+			/* take the 1st trunk as a template */
+			new_trunk = add_new_trunk((cvspool *)mpl, ((cvspool *)mpl)->trunk_list->t_total);
+		}
+		assert(new_trunk->t_total_mem == cur_t->t_total_mem);
+		msm_deser(cur_t, (void *)new_trunk, sizeof(cvspool_trunk), false);
+		new_trunk->t_used = cur_t->t_used;
+
+		pt -= (sizeof(cvspool_trunk) + cur_t->t_total_mem);
+		msm_deser(pt, (void *)new_trunk->mem, cur_t->t_total_mem, true);
+
+		i++;
+	}
+
+	/* patching */
+	((cvspool *)mpl)->used = sered_cvspl->used;
+
+	/* bookkeeping pool id mapping */
+	int retid = idr_alloc(&srd->ididr, (void *)(((cvspool *)mpl)->pool_id),
+			      sered_cvspl->pool_id, sered_cvspl->pool_id+1);
+	assert(retid == sered_cvspl->pool_id);
+
+	return saved_pt;
+}
+
+void cvspool_deser_low(struct ser_root_data *srd, void *mpl)
+{
+	cvspool *p = (cvspool *)mpl;
+
+	/* we are used purly for storing strings, so do nothing here. */
+	p;
+}

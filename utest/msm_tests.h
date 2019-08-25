@@ -8,7 +8,7 @@
 CuSuite* msm_getsuite();
 
 /* tests */
-void test_msm_objpool(CuTest *tc);
+void test_msm(CuTest *tc);
 
 
 

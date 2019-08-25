@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include "msm.h"
 
 /* Compact Variable Size Pool(cvspool) suits for storing objects like strings.
  * It's memory is 4Bytes aligned for every slot.
@@ -28,6 +29,18 @@
 
 /* cvspool modes (external) */
 #define CVSP_M_AUTOEX	(1<<0)	// auto expand ??
+#define CVSP_M_NEEDID	(1<<1)
+
+/* node ID encoding in 32bits */
+union node_id {
+	unsigned long l;
+	struct {
+		unsigned long up:2;	/* must be 2 LSB bits, in LittleEndian */
+		unsigned long pool:4;	/* poolid, check range in 0~15 */
+		unsigned long trunk:6;	/* trunk id, start from 0 */
+		unsigned long slot:20;	/* slot offset from t->mem, inside bnode */
+	} s;
+};
 
 /* for linking free nodes, 8Bytes long at minimal.
  * max size of 64K*4=256KBytes for a free node due to len's type u_int_16 */
@@ -65,20 +78,33 @@ typedef struct cvspool_busy_node1 {
 
 /* trunk of size (16*64*1024(slots) = 4MBytes), namely 16 bloks */
 typedef struct cvspool_trunk_s {
+	unsigned int id;		// trunk id
 	u_int32_t t_total;		// in slots
-	u_int32_t t_used;		// inited with 0
+	u_int32_t t_used;		// in slots, inited with 0
+	unsigned int t_total_mem;	// total mem length, in bytes
 	char *mem;			// value: mem == free_head
 	cvspool_fnode0 *free_head;	// circle list with this pre-allocated head
 	struct cvspool_trunk *next;
+	struct cvspool_trunk **pprev;	// originally, we can use list_head here,
+					// but we DO NOT want to rewrite old
+					// code. We use a back pointer of pointer.
 } cvspool_trunk;
 
 /* cvs pool */
 typedef struct cvs_pool {
-	u_int32_t total;	// in slots
+	u_int32_t total;		// in slots
 	u_int32_t used;			// inited with 0
+	u_int32_t total_mem;		// buffer total bytes
 	unsigned int mode;
-	unsigned int trunk_cnt;
+	unsigned int trunk_ocnt;	// original trunk count
+	unsigned int trunk_cnt;		// actual total trunk count
 	cvspool_trunk *trunk_list;
+	cvspool_trunk **btrunk_list;	// back list of trunk, with &trunk:pprev as node;
+	cvspool_trunk *cached_trunk;	// cached chunk ptr for accelrating id/node conversion
+
+	/* fields for ser */
+	unsigned int pool_id;
+	struct idr *trunk_idr;		/* for patching objs while serring, used for storing slab_ser_ctx */
 } cvspool;
 
 /* a cvs_pool may be composed of several blks that its max size is MAX_BLK_SIZE bytes.
@@ -109,18 +135,39 @@ typedef struct cvs_pool {
 	for (*t=cp->trunk_list; (*t!=NULL); *t=((*t)->next)) \
 		for (*fn=NEXT_FNODE((*t), (*t)->free_head); (*fn!=(*t)->free_head); *fn=NEXT_FNODE((*t),(*fn)))
 
+/* for each trunk in cvspool */
+#define for_each_trunk(cp, t)		\
+	for (*t=cp->trunk_list; (*t!=NULL); *t=((*t)->next))
+
+#if 0
+#define for_each_trunk_rev(cp, t, tmp)		\
+	for (tmp=cp->btrunk_list, *t=container_of(tmp, cvspool_trunk, next); \
+	     ((tmp!=NULL)&&((*t)!=NULL)); tmp=((*t)->pprev))
+#endif
+
 unsigned int slots_num_adjust(unsigned int slots_num);
 
 void set_fnode_len(cvspool_fnode0 *fn0, unsigned int len);
 int get_fnode_len(cvspool_fnode0 *fn0);
 
+unsigned long id_of_node(cvspool *cvsp, char *str);
+char *node_from_id(cvspool *cvsp, unsigned long id);
+
+char *iter_bnode(cvspool_trunk *t);
+void cvsp_for_each_bnode(cvspool *cvsp, int (*fn)(void *p, void *data), void *data);
 unsigned int get_bnode_mem_len(cvspool *cvsp, char *mem);
 
+cvspool_trunk *add_new_trunk(cvspool *sp, unsigned int t_slot_size);
 int cvsp_init(cvspool **cvsp, unsigned int slots_num, unsigned int mode);
 void cvsp_destroy(cvspool *cvsp);
 
 char *cvsp_alloc(cvspool *cvsp, unsigned int size);
 void cvsp_free(cvspool *cvsp, char *str);
+
+unsigned int cvspool_ser_getlen(struct ser_root_data *srd, void *mpl);
+char *cvspool_ser(struct ser_root_data *srd, void *mpl, char *dst);
+char *cvspool_deser_high(struct ser_root_data *srd, void *mpl, char *src);
+void cvspool_deser_low(struct ser_root_data *srd, void *mpl);
 
 #endif
 

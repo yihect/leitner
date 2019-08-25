@@ -10,6 +10,7 @@
 
 /* datasource/pool ID range */
 #define POOLID_MIN	1
+#define POOLID_MID	16	/* id for cvspool/objvec must be 0~15 */
 #define POOLID_MAX	512	/* could be 2^10=1024?? */
 
 /* bit flags (external) */

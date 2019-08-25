@@ -380,6 +380,22 @@ void test_init_cvspool(CuTest *tc)
 	/* no other trunks */
 	CuAssertPtrNull(tc, t->next);
 
+	/* test for_each_trunk() etc */
+	int tcnt = 0;
+	for_each_trunk(cp, &t) {
+		tcnt++;
+	}
+	CuAssertIntEquals(tc, 3, tcnt);
+
+	tcnt = 0;
+	cvspool_trunk **ppt = cp->btrunk_list;
+	while (ppt != NULL) {
+		cvspool_trunk *pt = container_of(ppt, cvspool_trunk, next);
+		tcnt++;
+		ppt = pt->pprev;
+	}
+	CuAssertIntEquals(tc, 3, tcnt);
+
 	cvsp_destroy(cp);
 }
 
@@ -393,7 +409,10 @@ void test_alloc1_cvspool(CuTest *tc)
 	if ((ret=cvsp_init(&cp, 4096, CVSP_M_AUTOEX)) != 0)
 		printf("cvsp_init() failure...\n");
 
-	/* "normal": alloc 12 Bytes */
+	CuAssertPtrEquals(tc, NULL, iter_bnode(cp->trunk_list));
+	CuAssertPtrEquals(tc, NULL, iter_bnode(cp->trunk_list));
+
+	/* 1, "normal": alloc 12 Bytes */
 	char *buf = cvsp_alloc(cp, 12);
 	size_t need_slots = 3+1;	// 12Bytes, (3+1) slots totally
 	t = cp->trunk_list;
@@ -406,7 +425,10 @@ void test_alloc1_cvspool(CuTest *tc)
 	CuAssertIntEquals(tc, BUSY_GUARD0, pbn0->g0);
 	CuAssertIntEquals(tc, need_slots, get_bnode_len(pbn0));
 
-	/* "abnormally 1": alloc 10 Bytes */
+	CuAssertPtrEquals(tc, buf, iter_bnode(cp->trunk_list));
+	CuAssertPtrEquals(tc, NULL, iter_bnode(cp->trunk_list));
+
+	/* 2, "abnormally 1": alloc 10 Bytes */
 	buf = cvsp_alloc(cp, 10);
 	need_slots = 3+1;	// 10Bytes, (3+1) slots totally
 	pfn = (cvspool_fnode0 *)((char *)pfn+need_slots*4);
@@ -418,7 +440,7 @@ void test_alloc1_cvspool(CuTest *tc)
 	CuAssertIntEquals(tc, BUSY_GUARD0, pbn0->g0);
 	CuAssertIntEquals(tc, need_slots, get_bnode_len(pbn0));
 
-	/* "abnormally 2": alloc 11 Bytes */
+	/* 3, "abnormally 2": alloc 11 Bytes */
 	buf = cvsp_alloc(cp, 11);
 	need_slots = 3+1;	// 11Bytes, (3+1) slots totally
 	pfn = (cvspool_fnode0 *)((char *)pfn+need_slots*4);
@@ -430,7 +452,7 @@ void test_alloc1_cvspool(CuTest *tc)
 	CuAssertIntEquals(tc, BUSY_GUARD0, pbn0->g0);
 	CuAssertIntEquals(tc, need_slots, get_bnode_len(pbn0));
 
-	/* "abnormally 3": alloc 13 Bytes */
+	/* 4, "abnormally 3": alloc 13 Bytes */
 	buf = cvsp_alloc(cp, 13);
 	need_slots = 4+1;	// 13Bytes, (4+1) slots totally
 	pfn = (cvspool_fnode0 *)((char *)pfn+need_slots*4);
@@ -452,6 +474,7 @@ void test_alloc1_cvspool(CuTest *tc)
 	buf = cvsp_alloc(cp, 42000);  // have alloated 10+11+12+13 bytes
 	CuAssertPtrNull(tc, buf);
 
+	/* 5, actually, allocate all remind Bytes */
 	int len_to = cp->total - cp->used;
 	buf = cvsp_alloc(cp, (len_to-1)<<2);
 	CuAssertPtrEquals(tc, pfn, buf-4);
@@ -461,6 +484,11 @@ void test_alloc1_cvspool(CuTest *tc)
 	for_each_fnode_cp(cp, &t, &pfn) {
 		printf("line[%d] pfn @ %lx \n", __LINE__, (unsigned long)pfn);
 	}
+
+	int allocated = 0;
+	while (iter_bnode(cp->trunk_list))
+		allocated ++;
+	CuAssertIntEquals(tc, 5, allocated);
 
 	cvsp_destroy(cp);
 }

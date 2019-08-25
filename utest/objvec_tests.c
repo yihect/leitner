@@ -16,7 +16,7 @@ void test_objv_init_alloc_free(CuTest *tc)
 	printf("test test_objv_init_alloc_free()...\n");
 
 	/* obj size: 16Bytes, 2 Pointers in 64bit machine */
-	struct objvec *ov = objv_init(16, NULL, NULL, NULL);
+	struct objvec *ov = objv_init(16, CVSP_M_AUTOEX|CVSP_M_NEEDID, NULL);
 
 	char *ov15 = objv_alloc(ov, 15);
 
@@ -55,7 +55,7 @@ void test_objv_realloc(CuTest *tc)
 	printf("test test_objv_realloc()...\n");
 
 	/* obj size: 16Bytes, 2 Pointers in 64bit machine */
-	struct objvec *ov = objv_init(16, NULL, NULL, NULL);
+	struct objvec *ov = objv_init(16, CVSP_M_AUTOEX|CVSP_M_NEEDID, NULL);
 
 	char *ov7 = objv_alloc(ov, 7);
 	CuAssertIntEquals(tc, (7*4+1), ov->cp->used);

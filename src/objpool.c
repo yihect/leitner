@@ -111,7 +111,7 @@ objpool_t *create_objpool(int obj_size, unsigned int mode, objp_oops_t *oops)
 	mpl->slab_size = OBJ_NUM * mpl->real_obj_size;
 	objpool_init(mpl);
 
-	/* need id when these obj pts are saved in objs of another type */
+	/* need id when these objpool ptr is saved in objs of another type */
 	mpl->mode = mode;
 	if (mpl->mode & OBJP_M_NEEDID) {
 		mpl->oops = oops;	/* may be null when no significant pointer member in obj */
@@ -323,6 +323,8 @@ char *objpool_deser_high(struct ser_root_data *srd, void *mpl, char *src)
 		s = s->next;
 	}
 	((struct objpool *)mpl)->free_obj_nr = sered_pl->free_obj_nr;
+
+	/* mapping in ididr from sered pool_id to new pool_id */
 	int retid = idr_alloc(&srd->ididr, (void *)((struct objpool *)mpl)->pool_id,
 			      sered_pl->pool_id, sered_pl->pool_id+1);
 	assert(retid == sered_pl->pool_id);

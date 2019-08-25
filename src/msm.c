@@ -12,6 +12,8 @@
 #include "log.h"
 #include "merror.h"
 #include "objpool.h"
+#include "cvspool.h"
+#include "objvec.h"
 
 static struct ser_root_data *only_srd = NULL;
 struct ser_head sh = {"MSM", 0, 1, 0, 0};
@@ -227,7 +229,6 @@ static int load_from_mem(struct ser_root_data *srd, void *addr, size_t sz)
 		detail_head = dv; /* save header */
 		if (dsn[i]->sered_sum->sse_len == 0) continue;
 
-		//dsn[i]->sered_detail = dv;
 		dv = dsn[i]->dec_detail_high(dsn[i], dv);
 		assert(dsn[i]->sered_sum->sse_len == (dv-detail_head));
 	}
@@ -364,6 +365,10 @@ struct ser_root_data *msm_get_no_ref()
 	/* init pool ops */
 	msm_register_pt(only_srd, PT_OBJP, objpool_ser_getlen,
 			objpool_ser, objpool_deser_high, objpool_deser_low);
+	msm_register_pt(only_srd, PT_CVSP, cvspool_ser_getlen,
+			cvspool_ser, cvspool_deser_high, cvspool_deser_low);
+	msm_register_pt(only_srd, PT_OBJV, objvec_ser_getlen,
+			objvec_ser, objvec_deser_high, objvec_deser_low);
 	msm_register_pt(only_srd, PT_NOP, NULL, NULL, NULL, NULL);
 
 	return only_srd;
