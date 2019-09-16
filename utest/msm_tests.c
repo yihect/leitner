@@ -78,7 +78,7 @@ void foo_ser_dtor(objpool_t *mpl)
 
 			/* we know foo_desc comes from cp_str */
 			extern cvspool *cp_str;
-			sf->foo_desc = (char *)id_of_node(cp_str, foo_array[i]);
+			sf->foo_desc = (char *)id_of_node(cp_str, sf->foo_desc);
 		}
 	}
 
