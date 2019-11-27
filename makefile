@@ -26,10 +26,12 @@ app			:= $(BIN_PATH)/ltsys
 sources := 	utest/AllTests.c \
 		utest/CuTest.c \
 		utest/glue_tests.c \
+		utest/enum_hash_tests.c \
 		utest/mempool_tests.c \
 		utest/objpool_tests.c \
 		utest/cvspool_tests.c \
 		utest/objvec_tests.c \
+		utest/util_tests.c \
 		utest/bitmap_tests.c \
 		utest/idr_tests.c \
 		utest/msm_tests.c \

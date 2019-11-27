@@ -73,6 +73,16 @@ void *read_file(const char *fn, unsigned *_sz);
 int decimal(char *s, int count);
 char *dupstr(char *s);
 
+struct hash_arg {
+	unsigned from;
+	unsigned len;
+	char base_char;	/* chars based on, like 'a' or 'A' */
+	unsigned power;	/* 52 or 26 */
+	char *omited_chars;
+	unsigned hash_size;
+};
+unsigned str_hash(char *str, struct hash_arg *harg);
+
 #endif
 
 

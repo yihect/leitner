@@ -1,7 +1,7 @@
 #ifndef _TYPES_H_
 #define _TYPES_H_
 
-typedef unsigned short	idt;
+typedef unsigned long	idt;
 
 typedef __signed__ char __s8;
 typedef unsigned char __u8;
