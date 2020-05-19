@@ -65,19 +65,22 @@ char *objv_alloc(struct objvec *ov, unsigned obj_cnt)
 /* caller must make sure oldobjs is allocated from our objvec, and
  * has a correct length */
 char *objv_realloc(struct objvec *ov, char *oldobjs, unsigned new_cnt,
-		   void (*adjust_fn)(char *oldobjs, char *newobjs, void *adj_param),
+		   void (*adjust_fn)(char *oldobjs, unsigned oldsize,
+				     char *newobjs, unsigned newsize,
+				     void *adj_param),
 		   void *adjparam)
 {
-	unsigned int memlen = get_bnode_mem_len(ov->cp, (char *)oldobjs);
+	unsigned int oldlen = get_bnode_mem_len(ov->cp, (char *)oldobjs);
 
 	/* generally expand memory */
-	assert((new_cnt*ov->size) > memlen);
-	char *newobjs = cvsp_alloc(ov->cp, ov->size*new_cnt);
+	unsigned int newlen = ov->size * new_cnt;
+	assert(newlen > oldlen);
 
-	/* simply copy, and adjust */
-	memcpy(newobjs, oldobjs, memlen);
+	char *newobjs = cvsp_alloc(ov->cp, newlen);
+
+	/* do different copy, and adjust */
 	if (adjust_fn)
-		adjust_fn(oldobjs, newobjs, adjparam);
+		adjust_fn(oldobjs, oldlen, newobjs, newlen, adjparam);
 
 	cvsp_free(ov->cp, oldobjs);
 	return newobjs;

@@ -35,10 +35,15 @@ void test_objv_init_alloc_free(CuTest *tc)
 	objv_exit(ov);
 }
 
-void our_adjust_fn(char *oldobjs, char *newobjs, void *adj_param)
+void our_adjust_fn(char *oldobjs, unsigned oldsize,
+		   char *newobjs, unsigned newsize, void *adj_param)
 {
 	struct adjp *pap = (struct adjp *)adj_param;
 
+	/* firstly, copy content */
+	memcpy(newobjs, oldobjs, oldsize);
+
+	/* and then, do adjust of these content */
 	char *pobj = NULL, *pdest = NULL;
 	for (int i=6, j=31; i>=pap->off; i--,j--) {
 		pobj = newobjs + i*16;
