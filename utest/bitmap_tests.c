@@ -52,14 +52,14 @@ void test_bitmap_set_clear(CuTest *tc)
 
 void test_bitmap_full_clear(CuTest *tc)
 {
-	printf("sizeof(int): %d, sizeof(long): %d\n", sizeof(int), sizeof(long));
-
 	struct a {
 		unsigned long p1;
 		DECLARE_BITMAP(mbits,48);
 		unsigned long p2;
 	} t;
 
+	printf("sizeof(int): %d, sizeof(long): %d, sizeof(struct a): %d\n",
+	       sizeof(int), sizeof(long), sizeof(struct a));
 	memset((char *)&t, 0xff, sizeof(t));
 
 	bitmap_zero(t.mbits, 48); /* 0~47 + 48~63 */
@@ -76,9 +76,10 @@ void test_bitmap_full_clear(CuTest *tc)
 	CuAssertIntEquals(tc, -1, t.p1); /* bits all set */
 	CuAssertIntEquals(tc, -1, t.p2); /* bits all set */
 
-	CuAssertIntEquals(tc, 1, bitmap_full(&t.p1, 64)); /* bits all set */
+	/* note diff in 32bits & 64bits */
+	CuAssertIntEquals(tc, 1, bitmap_full(&t.p1, BITS_PER_LONG)); /* bits all set */
 	CuAssertIntEquals(tc, 1, bitmap_empty(&t.mbits, 64));
-	CuAssertIntEquals(tc, 1, bitmap_full(&t.p2, 64)); /* bits all set */
+	CuAssertIntEquals(tc, 1, bitmap_full(&t.p2, BITS_PER_LONG)); /* bits all set */
 
 	/* set and clear */
 	bitmap_set(t.mbits, 3, 4);
@@ -141,6 +142,9 @@ void test_bitmap_for(CuTest *tc)
 void test_bitmap_weight(CuTest *tc)
 {
 	DECLARE_BITMAP(mbits, 36);
+
+	/* for 32bits, need to make sure bitmap_empty(mbits, 36) */
+	bitmap_zero(mbits, 36);
 
 	*((unsigned long *)mbits) = 0x36;	/* 0x36, 4bits set totally */
 	CuAssertIntEquals(tc, 4, bitmap_weight(mbits, 36));
