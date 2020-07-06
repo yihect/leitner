@@ -72,7 +72,7 @@ void test_objv_realloc(CuTest *tc)
 	struct adjp ap = {2, 25};	/* expand 25 objs at offset 2 */
 
 	/* 7 is too small, realloc to 32 objs */
-	ov7 = objv_realloc(ov, ov7, 32, our_adjust_fn, &ap);
+	ov7 = objv_realloc(ov, ov7, 32, our_adjust_fn, &ap, true);
 	CuAssertIntEquals(tc, (16*32), get_bnode_mem_len(ov->cp, ov7));
 	CuAssertIntEquals(tc, (32*4+1), ov->cp->used);
 

@@ -43,8 +43,8 @@ void objv_exit(struct objvec *ov);
 char *objv_alloc(struct objvec *ov, unsigned obj_cnt);
 char *objv_realloc(struct objvec *ov, char *oldobjs, unsigned new_cnt,
 		   void (*adjust_fn)(char *oldobjs, unsigned oldsize,
-				     char *newobjs, unsigned newsize, void *adj_pram),
-		   void *adjparam);
+				     char *newobjs, unsigned newsize, void *adj_param),
+		   void *adjparam, bool free_old);
 void objv_free(struct objvec *ov, char *objs);
 
 unsigned int objvec_ser_getlen(struct ser_root_data *srd, void *mpl);

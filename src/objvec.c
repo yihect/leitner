@@ -68,7 +68,7 @@ char *objv_realloc(struct objvec *ov, char *oldobjs, unsigned new_cnt,
 		   void (*adjust_fn)(char *oldobjs, unsigned oldsize,
 				     char *newobjs, unsigned newsize,
 				     void *adj_param),
-		   void *adjparam)
+		   void *adjparam, bool free_old)
 {
 	unsigned int oldlen = get_bnode_mem_len(ov->cp, (char *)oldobjs);
 
@@ -82,7 +82,9 @@ char *objv_realloc(struct objvec *ov, char *oldobjs, unsigned new_cnt,
 	if (adjust_fn)
 		adjust_fn(oldobjs, oldlen, newobjs, newlen, adjparam);
 
-	cvsp_free(ov->cp, oldobjs);
+	if (free_old)
+		cvsp_free(ov->cp, oldobjs);
+
 	return newobjs;
 }
 
