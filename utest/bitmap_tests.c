@@ -147,10 +147,13 @@ void test_bitmap_weight(CuTest *tc)
 	bitmap_zero(mbits, 36);
 
 	*((unsigned long *)mbits) = 0x36;	/* 0x36, 4bits set totally */
-	CuAssertIntEquals(tc, 4, bitmap_weight(mbits, 36));
+	CuAssertIntEquals(tc, 4, bitmap_weight2(mbits, 36));
+	CuAssertIntEquals(tc, 1, bitmap_weight2(mbits, 2));
+	CuAssertIntEquals(tc, 0, bitmap_weight2(mbits, 1));
+	CuAssertIntEquals(tc, 0, bitmap_weight2(mbits, 0));
 
 	*((unsigned long *)mbits) = 0x123456;
-	CuAssertIntEquals(tc, 9, bitmap_weight(mbits, 36));
+	CuAssertIntEquals(tc, 9, bitmap_weight2(mbits, 36));
 }
 
 

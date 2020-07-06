@@ -577,3 +577,13 @@ int bitmap_weight(const unsigned long *src, unsigned int nbits)
 	return __bitmap_weight(src, nbits);
 }
 
+/* when nbits==0, bitmap_weight() will return 32bits weight,
+ * so here we make a new function to return 0 when nbits is zero */
+int bitmap_weight2(const unsigned long *src, unsigned int nbits)
+{
+	if (nbits == 0)
+		return 0;
+
+	return bitmap_weight(src, nbits);
+}
+

@@ -70,6 +70,7 @@ void bitmap_set(unsigned long *map, unsigned int start, int len);
 void bitmap_clear(unsigned long *map, unsigned int start, int len);
 
 int bitmap_weight(const unsigned long *src, unsigned int nbits);
+int bitmap_weight2(const unsigned long *src, unsigned int nbits);
 
 int fls64(__u64 x);
 
