@@ -116,7 +116,7 @@ void test_enum_hash(CuTest *tc)
 	enumnode_cache = create_objpool(sizeof(struct enumnode), 0, NULL);
 
 	struct rb_root hashtree = RB_ROOT;
-	FILE *fp = fopen("../conf/enum.txt", "r");
+	FILE *fp = fopen("../utest/enum.txt", "r");
 	CuAssertPtrNotNull(tc, fp);
 
 	char *line = NULL, *buf = NULL;
@@ -168,7 +168,7 @@ void test_enum_hash(CuTest *tc)
 	/* output enum declare content like:
 	 * XX(BDT_PT, ,409)	\
 	 */
-	FILE *fpw = fopen("../conf/enum_content.txt", "w+");
+	FILE *fpw = fopen("../utest/enum_content.txt", "w+");
 	CuAssertPtrNotNull(tc, fpw);
 	en = NULL;
 	list_for_each_entry(en, &en_list, en_node) {

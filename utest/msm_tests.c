@@ -15,7 +15,7 @@ CuSuite* msm_getsuite()
 	return suite;
 }
 
-char *filename = "./test.msm";
+char *filename = "../utest/test.msm";
 
 /*******************************************************************
  * bar & foo of objpool
