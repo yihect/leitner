@@ -4,6 +4,7 @@
 #include <assert.h>
 #include "list.h"
 #include "rbtree.h"
+#include "types.h"
 
 #ifndef BUG_ON  
 #define BUG_ON(cond) assert(!(cond))
@@ -28,7 +29,7 @@
 #define NEW_FIRST_INODE_LINENR	0x4e46494c	// NewFIL
 #define NEW_COUNT	0x4e434e54	// NewCNT
 
-typedef unsigned short	idt;
+//typedef unsigned short	idt;
 
 ///////////////////////////////////////////////////
 // language basics

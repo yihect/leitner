@@ -209,11 +209,11 @@ static int load_from_mem(struct ser_root_data *srd, void *addr, size_t sz)
 	struct ser_head lsh;
 	void *detail_head, *dv = addr;
 
-	/* calloc will set all byte to zero */
-	dsn = calloc(lsh.sh_cnt, sizeof(struct ds_node *));
-
 	/* deser the head */
 	dv = msm_deser(dv, &lsh, sizeof(struct ser_head), true);
+
+	/* calloc will set all byte to zero */
+	dsn = calloc(lsh.sh_cnt, sizeof(struct ds_node *));
 
 	/* deser every summary entry */
 	for (int i=0; i<lsh.sh_cnt; i++) {
