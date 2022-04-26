@@ -10,3 +10,6 @@ http://dictionary.cambridge.org/search/american-english/direct/?source=gadgets&q
 中级:
 http://dictionary.cambridge.org/search/american-english/direct/?source=gadgets&q=%s
 
+这里可以查找很多句子:
+https://ludwig.guru/
+

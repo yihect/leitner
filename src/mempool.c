@@ -70,12 +70,12 @@ void * init_mem_pool(int chunks, int size, int nosplit)
             pool->nosplit     = nosplit;
             pool->num_allocs  = 0;
             pool->num_slides  = 0;
-            
-         
+
+
             handles[0].ptr    = chunk;
             handles[0].status = MEM_FREE_SIG;
             handles[0].size   = size + chunks * 2 * sizeof(mem_chunk_t) - sizeof(mem_chunk_t);
-            
+
             chunk->guard0     = MEM_FREE_SIG;
             chunk->next       = NULL;
             chunk->prev       = NULL;
@@ -113,7 +113,7 @@ void * lock_mem_chunk(void * pool, int handle)
 {
    void * result;
    result = NULL;
-   
+
    if (Pool->handles[handle].status == MEM_ALOC_SIG) {
       if (Pool->handles[handle].ptr->guard0 == MEM_ALOC_SIG &&
           Pool->handles[handle].ptr->guard1 == MEM_ALOC_SIG) {
@@ -125,11 +125,11 @@ void * lock_mem_chunk(void * pool, int handle)
          result = (void *)((char *)result + sizeof(mem_chunk_t));
       } else {
          /* error - memory corruption */
-printf("memory corruption\n");         
+printf("memory corruption\n");
       }
    } else {
       /* error - chunk was not in a released state */
-printf("memory corruption\n");         
+printf("memory corruption\n");
    }
    return result;
 }
@@ -151,11 +151,11 @@ void release_mem_chunk(void * pool, int handle)
          Pool->handles[handle].ptr->guard1 = MEM_ALOC_SIG;
       } else {
          /* error - memory corruption */
-printf("memory corruption\n");         
+printf("memory corruption\n");
       }
    } else {
       /* error - chunk was not in a locked state */
-printf("memory corruption\n");         
+printf("memory corruption\n");
    }
 }
 
@@ -246,11 +246,11 @@ void free_mem_chunk(void * pool, int handle)
          while (handle = merge_chunks(pool, handle)) {}
       } else {
          /* error - memory corruption */
-printf("memory corruption\n");         
+printf("memory corruption\n");
       }
    } else {
       /* error - chunk was not in a locked state */
-printf("memory corruption\n");         
+printf("memory corruption\n");
    }
 }
 
@@ -281,7 +281,7 @@ void slide_chunk_up(void * pool, mem_chunk_t * chunk)
    source = (char *)chunk + sizeof(mem_chunk_t);
    /* Copy the chunk contents */
    memmove(dest, source, Pool->handles[chunk->handle].size);
-   
+
    newchunk->guard0 = chunk->guard0;
    newchunk->next   = freegoo.next;
    if (newchunk->next == NULL) {
@@ -292,12 +292,12 @@ void slide_chunk_up(void * pool, mem_chunk_t * chunk)
    newchunk->prev   = chunk;
    newchunk->handle = chunk->handle;
    newchunk->guard1 = chunk->guard1;
-   
+
    chunk->guard0    = MEM_FREE_SIG;
    chunk->next      = newchunk;
    chunk->handle    = freegoo.handle;
    chunk->guard1    = MEM_FREE_SIG;
-   
+
    Pool->handles[chunk->handle].ptr = chunk;
    Pool->handles[newchunk->handle].ptr = newchunk;
 }
@@ -336,7 +336,7 @@ int attempt_to_alloc(void * pool, int size)
          Pool->handles[0].size >= size + (int)sizeof(mem_chunk_t)) {
       /* split the handle 0 pool by taking a piece off the end */
       handle = unused_handle;
-      
+
       Pool->handles[handle].ptr         =
          (mem_chunk_t *)((char *)Pool->handles[0].ptr + (Pool->handles[0].size - size));
       Pool->handles[handle].status      = MEM_ALOC_SIG;
@@ -353,7 +353,7 @@ int attempt_to_alloc(void * pool, int size)
       Pool->handles[handle].ptr->prev   = Pool->handles[0].ptr;
       Pool->handles[handle].ptr->handle = handle;
       Pool->handles[handle].ptr->guard1 = MEM_ALOC_SIG;
-      
+
       Pool->handles[0].ptr->next = Pool->handles[handle].ptr;
       Pool->handles[0].size -= (size + sizeof(mem_chunk_t));
 
@@ -383,7 +383,7 @@ int attempt_to_alloc(void * pool, int size)
          Pool->handles[handle].status      = MEM_ALOC_SIG;
          Pool->handles[handle].ptr->guard0 = MEM_ALOC_SIG;
          Pool->handles[handle].ptr->guard1 = MEM_ALOC_SIG;
-         
+
          Pool->alloced += Pool->handles[handle].size;
          Pool->free    -= Pool->handles[handle].size;
 
@@ -417,7 +417,7 @@ int attempt_to_alloc(void * pool, int size)
             Pool->handles[handle].ptr->guard0 = MEM_ALOC_SIG;
             Pool->handles[handle].ptr->next = Pool->handles[unused_handle].ptr;
             Pool->handles[handle].ptr->guard1 = MEM_ALOC_SIG;
-            
+
             Pool->alloced += size;
             Pool->free    -= (size + sizeof(mem_chunk_t));
 
@@ -429,7 +429,7 @@ int attempt_to_alloc(void * pool, int size)
 
          /* Split and attempt to merge empty chunk with prev */
          handle = unused_handle;
-      
+
          Pool->handles[handle].ptr         = (mem_chunk_t *)
             ((char *)Pool->handles[small_handle].ptr + (Pool->handles[small_handle].size - size));
          Pool->handles[handle].status      = MEM_ALOC_SIG;
@@ -446,7 +446,7 @@ int attempt_to_alloc(void * pool, int size)
          Pool->handles[handle].ptr->prev   = Pool->handles[small_handle].ptr;
          Pool->handles[handle].ptr->handle = handle;
          Pool->handles[handle].ptr->guard1 = MEM_ALOC_SIG;
-      
+
          Pool->handles[small_handle].ptr->next = Pool->handles[handle].ptr;
          Pool->handles[small_handle].size -= (size + sizeof(mem_chunk_t));
 
@@ -457,7 +457,7 @@ int attempt_to_alloc(void * pool, int size)
          while (small_handle = merge_chunks(pool, small_handle)) {}
 
          return handle;
-      }   
+      }
    }
    /* Indicate failure */
    return 0;
@@ -483,14 +483,14 @@ int alloc_mem_chunk(void * pool, int size)
    if (size <= 0) {
       return 0;
    }
- 
+
    if (Pool->free < size) {
       /* we are out of memory - no amount of consolidation would help */
       return 0;
    }
 
    Pool->num_allocs++;
-   
+
    result = attempt_to_alloc(pool, size);
 
    if (!result) {
@@ -502,7 +502,7 @@ int alloc_mem_chunk(void * pool, int size)
       while (chunk) {
          if (chunk->guard0 == MEM_ALOC_SIG &&
              chunk->next && chunk->next->guard0 == MEM_FREE_SIG) {
-             
+
             slide_chunk_up(pool, chunk); /* chunk becomes the free chunk */
             if (handle = merge_chunks(pool, chunk->handle)) {
                if (Pool->handles[handle].size >= size + (int)sizeof(mem_chunk_t)) {
@@ -522,7 +522,7 @@ int alloc_mem_chunk(void * pool, int size)
             }
          }
          chunk = chunk->prev;
-      }   
+      }
    }
    return result;
 }
@@ -544,7 +544,7 @@ void mem_pool_stats(void * pool)
    chunk = Pool->handles[0].ptr;
 
    while (chunk) {
-   
+
       if (chunk->guard0 == MEM_FREE_SIG && chunk->guard1 == MEM_FREE_SIG) {
          strcpy(status, "FREE");
       } else
@@ -581,7 +581,7 @@ void mem_pool_stats(void * pool)
             printf("Error: handle %3d chunk->prev chain broken\n", chunk->handle);
          }
       }
-      
+
    }
    if (Pool->last != prev) {
       printf("Error: Pool->last %08lux but prev is %08lux\n", (unsigned long)Pool->last, (unsigned long)prev);

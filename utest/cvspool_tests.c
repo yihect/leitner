@@ -3,6 +3,8 @@
 #include "cvspool_tests.h"
 #include "util.h"
 
+#define CVSPOOL_TEST_DEBUG	0
+
 CuSuite* cvspool_getsuite()
 {
 	CuSuite *suite = CuSuiteNew();
@@ -53,7 +55,9 @@ void test_fuck_macro(CuTest *tc)
 
 void test_slots_num_adjust(CuTest *tc)
 {
+#if CVSPOOL_TEST_DEBUG
 	printf("test_slots_num_adjust() testing... \n");
+#endif
 
 	/* make sure there are 3 slots at least */
 	CuAssertIntEquals(tc, 3, slots_num_adjust(1));
@@ -82,7 +86,9 @@ void test_slots_num_adjust(CuTest *tc)
 
 void test_init_cvspool(CuTest *tc)
 {
+#if CVSPOOL_TEST_DEBUG
 	printf("test_init_cvspool() testing...\n");
+#endif
 	int ret;
 
 	cvspool *cp=NULL;
@@ -115,7 +121,9 @@ void test_init_cvspool(CuTest *tc)
 	CuAssertPtrEquals(tc, pfn, PREV_FNODE(t, t->free_head));
 
 	for_each_fnode(t, &pfn) {
+#if CVSPOOL_TEST_DEBUG
 		printf("line[%d] pfn @ %lx \n", __LINE__, (unsigned long)pfn);
+#endif
 	}
 
 	cvsp_destroy(cp);
@@ -150,7 +158,9 @@ void test_init_cvspool(CuTest *tc)
 	cvspool_fnode0 *p_pfn = pfn;
 	pfn = (cvspool_fnode0 *)((char *)t->mem+128*1024*4);
 	CuAssertIntEquals(tc, FREE_GUARD0, pfn->pad);
+#if CVSPOOL_TEST_DEBUG
 	printf("pp_pfn: %lx, p_pfn: %lx, pfn: %lx\n", pp_pfn, p_pfn, pfn);
+#endif
 	CuAssertIntEquals(tc, slots_num_adjust(20+3), get_fnode_len(pfn));
 	CuAssertIntEquals(tc, IBOFF_OF_SLOTABS(0), pfn->next);
 	CuAssertIntEquals(tc, IBOFF_OF_SLOTABS(0), pfn->prev);
@@ -166,7 +176,9 @@ void test_init_cvspool(CuTest *tc)
 	CuAssertPtrEquals(tc, t->free_head, NEXT_FNODE(t, pfn));
 
 	for_each_fnode(t, &pfn) {
+#if CVSPOOL_TEST_DEBUG
 		printf("line[%d] pfn @ %lx \n", __LINE__, (unsigned long)pfn);
+#endif
 	}
 
 	cvsp_destroy(cp);
@@ -244,7 +256,9 @@ void test_init_cvspool(CuTest *tc)
 	CuAssertPtrEquals(tc, t->free_head, NEXT_FNODE(t, pfn));
 
 	for_each_fnode(t, &pfn) {
+#if CVSPOOL_TEST_DEBUG
 		printf("line[%d] pfn @ %lx \n", __LINE__, (unsigned long)pfn);
+#endif
 	}
 
 	cvsp_destroy(cp);
@@ -282,7 +296,9 @@ void test_init_cvspool(CuTest *tc)
 	CuAssertPtrEquals(tc, t->free_head, NEXT_FNODE(t, pfn));
 
 	for_each_fnode(t, &pfn) {
+#if CVSPOOL_TEST_DEBUG
 		printf("line[%d] pfn @ %lx \n", __LINE__, (unsigned long)pfn);
+#endif
 	}
 
 	cvsp_destroy(cp);
@@ -401,7 +417,9 @@ void test_init_cvspool(CuTest *tc)
 
 void test_alloc1_cvspool(CuTest *tc)
 {
+#if CVSPOOL_TEST_DEBUG
 	printf("test_alloc1_cvspool() testing...\n");
+#endif
 	cvspool_trunk *t = NULL;
 
 	int ret;
@@ -482,7 +500,9 @@ void test_alloc1_cvspool(CuTest *tc)
 	CuAssertIntEquals(tc, len_to, get_bnode_len((cvspool_bnode0 *)(buf-4)));
 
 	for_each_fnode_cp(cp, &t, &pfn) {
+#if CVSPOOL_TEST_DEBUG
 		printf("line[%d] pfn @ %lx \n", __LINE__, (unsigned long)pfn);
+#endif
 	}
 
 	int allocated = 0;
@@ -495,7 +515,9 @@ void test_alloc1_cvspool(CuTest *tc)
 
 void test_alloc2_cvspool(CuTest *tc)
 {
+#if CVSPOOL_TEST_DEBUG
 	printf("test_alloc2cvspool() testing...\n");
+#endif
 
 	int ret;
 	cvspool *cp=NULL;
@@ -548,7 +570,9 @@ void test_alloc2_cvspool(CuTest *tc)
 /* test adding new trunk */
 void test_alloc3_cvspool(CuTest *tc)
 {
+#if CVSPOOL_TEST_DEBUG
 	printf("test_alloc3_cvspool() testing...\n");
+#endif
 
 	int ret;
 	cvspool *cp=NULL;
@@ -598,7 +622,9 @@ void test_alloc3_cvspool(CuTest *tc)
 
 void test_free_cvspool(CuTest *tc)
 {
+#if CVSPOOL_TEST_DEBUG
 	printf("test_free_cvspool() testing...\n");
+#endif
 
 	int ret;
 	cvspool *cp=NULL;
@@ -680,7 +706,9 @@ void test_free_cvspool(CuTest *tc)
 	CuAssertIntEquals(tc, 0, cp->used);
 
 	for_each_fnode_cp(cp, &t, &pfn) {
+#if CVSPOOL_TEST_DEBUG
 		printf("line[%d] pfn @ %lx \n", __LINE__, (unsigned long)pfn);
+#endif
 	}
 
 	cvsp_destroy(cp);

@@ -2,6 +2,8 @@
 #include "mempool.h"
 #include "mempool_tests.h"
 
+#define MEMPOOL_TEST_DEBUG 0
+
 CuSuite* mempool_getsuite()
 {
   CuSuite *suite = CuSuiteNew();
@@ -12,7 +14,9 @@ CuSuite* mempool_getsuite()
  
 void test_init_mempool(CuTest *tc)
 {
+#if MEMPOOL_TEST_DEBUG
   printf("test_init_mempool() testing...\n");
+#endif
   int s;
 
   mem_pool_t *p = (mem_pool_t *)init_mem_pool(1024, 120*1024*1024, 32);
@@ -23,13 +27,17 @@ void test_init_mempool(CuTest *tc)
   CuAssertPtrEquals(tc, p->handles[0].ptr, p->last);
 
   free_mem_pool(p);
+#if MEMPOOL_TEST_DEBUG
   printf("\n");
+#endif
 }
 
 void test_alloc_mempool(CuTest *tc)
 {
+#if MEMPOOL_TEST_DEBUG
   printf("test_alloc_mempool() testing...\n");
   printf("sizeof(mem_chunk_t) is %d\n", (int)sizeof(mem_chunk_t));
+#endif
   int s;
   mem_pool_t *p = (mem_pool_t *)init_mem_pool(1024, 120*1024*1024, 32);
 
@@ -43,7 +51,9 @@ void test_alloc_mempool(CuTest *tc)
 
 
   free_mem_pool(p);
+#if MEMPOOL_TEST_DEBUG
   printf("\n");
+#endif
 }
 
 

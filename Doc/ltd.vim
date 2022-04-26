@@ -12,7 +12,7 @@ syn match meaningPrefix 	"[.|:|;]"
 syn match ltdComment 		"#.*$"
 syn match ltdIdentifier		"\<[a-zA-Z_][a-zA-Z0-9_]*\>"
 
-syn keyword ltdRegionType1	ENUM 	
+syn keyword ltdRegionType1	ENUM
 syn keyword ltdRegionType2	RFX VOC VGRP GRAM VS	nextgroup=ltdID
 syn keyword ltdRegionAtti	ITEM
 syn keyword ltdReference	RFREF VREF VGREF GREF
