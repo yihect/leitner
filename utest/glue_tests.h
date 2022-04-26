@@ -3,6 +3,7 @@
 
 #include "CuTest.h"
 #include "vs.h"
+#include "glue.h"
 
 
 CuSuite* glue_getsuite();

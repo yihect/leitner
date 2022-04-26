@@ -26,6 +26,7 @@ app			:= $(BIN_PATH)/ltsys
 sources := 	utest/AllTests.c \
 		utest/CuTest.c \
 		utest/glue_tests.c \
+		utest/glue_eng_tests.c \
 		utest/enum_hash_tests.c \
 		utest/mempool_tests.c \
 		utest/objpool_tests.c \
@@ -43,6 +44,7 @@ sources := 	utest/AllTests.c \
 		src/idr.c \
 		src/vs.c \
 		src/glue.c \
+		src/glue_eng.c \
 		src/mempool.c \
 		src/objpool.c \
 		src/cvspool.c \

@@ -1,0 +1,13 @@
+A, about enum name of TS/UW/MW/TW etc.
+	1, for generating different hash val from enum name, we encoding special 
+	char sequence in enum name, such as:
+		a, TS_PT_PTMAX / TS_PG_PGMAX / TS_RF_RFMAX / TS_V_VMAX / TS_G_GMAX TS_S_SMAX
+		b, TS_PG_TSADVANCED / UW_PG_UWADVANCED
+		c, UW_V_CHARACTER_DESCRIBING / TS_V_DESCRIBING_PEOPLE
+		d, TS_V_TSFEELINGS_EMOTIONS / UW_V_UWFEELINGS_EMOTIONS
+		e, TS_V_ABOUT_HEALTH / UW_V_HEALTHY_LIFESTYLE
+		f, UW_V_ANIMALS_IN_TALKING / UW_V_TALKING_ABOUT_CLOTHES / UW_V_FOOD_IN_TALKING / UW_V_FREE_TIME_IN_TALKING
+	2, because all UW IDs are govered by an only enum, namely uw_types enum. We must make sure there are some fixed chars
+	to ignore in enum name, so:
+		a, rename UW_V_AT_THE_BANK to UW_VV_AT_THE_BANK, UW_V_AGE to UW_VV_AGE etc.
+		b, set the max value, namly UW_XX_MAX

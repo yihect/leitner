@@ -1,22 +1,62 @@
 #include "vs.h"
+#include "glue.h"
 
 /*
  * Note A
  * =======
  * Glue bitmap format in gl node:
  *
- * a, type 0, length of 4 Bytes
- * 
- *  Note: T=0, P is free
+ * default length of 4 Bytes
  *
- * 31  28 27 26         18 17  15 14	             0
- *  XXXX  T   YYY YYYY YY   PP P   FFF FFFF FFFF FFFF
- *  ----  ------- ---- ------- ------- ---- ---- ----
- *  TYPE      <ValidBits>          <--Offset   val-->
+ *  Note:
+ *	XXXX -> business data type
+ *	YY -> wrapper types(uw/mw/tw etc.)
  *
- * Totally encode 9 lh nodes in Offset field 
- * with 9bits in ValidBits field.
+ * 31  28  26 25                   	      0
+ *  XXXX  YY   VV VVVV VVVV VVVV VVVV VVVV VVVV
+ *  ----  --------- ---- ---- ---- ---- ---- ----
+ *  TYPE       <--        Valid Bits        -->
  *
+ * Totally encode 25 lh nodes in ValidBits field.
+ *
+ */
+
+
+DEFINE_ENUM(wrapper_types, WRAPPER_TYPES, strlen("WT_"))
+
+/* data root */
+struct dataroot dr;
+
+#define data_part_init(id, name, ts_max)		\
+	for (i=0; i<2; i++) {				\
+		idr_init(&dr.name##_idrs[i]);		\
+	}						\
+	for (i=0; i<(ts_max); i++) {			\
+		INIT_LIST_HEAD(&dr.name##_uw_list[i]);	\
+	}						\
+	dr.name##_mw_rb = RB_ROOT
+
+
+void glue_init()
+{
+	int i = 0;
+	idr_init(&dr.all_uw_idr);
+
+	data_part_init(BDT_PT, phontran, TS_PT_PTMAX);
+	data_part_init(BDT_PG, phongram, TS_PG_PGMAX);
+	data_part_init(BDT_RF, rootfix, TS_RF_RFMAX);
+	data_part_init(BDT_V, voca, TS_V_VMAX);
+	data_part_init(BDT_G, gram, TS_G_GMAX);
+	data_part_init(BDT_S, sent, TS_S_SMAX);
+}
+
+
+
+#if 0
+/*
+ * Note A
+ * =======
+ * Glue bitmap format in gl node:
  *
  * b, type 1, length of 8 Bytes
  *
@@ -190,7 +230,7 @@ unsigned get_offset(unsigned *gn_bitmap, unsigned gn_type)
   return res_off;
 }
 
-
+#endif
 
 
 

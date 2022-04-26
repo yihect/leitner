@@ -414,14 +414,14 @@ struct glt_write_tips {
   char obj_type_char; // obj_type char in cmd
   char *w_tipe_file;
   int file_linenr;
-} glt_wtips[GL_T_MAX] =
+} glt_wtips[BDT_BDTMAX] =
 {
-  {GL_T_PHONTRANS, 't', "phonsym_tip_ltd.txt", 0},
-  {GL_T_PHON, 'p', "phonsym_tip_ltd.txt", 0},
-  {GL_T_RFIX, 'r', "rfix_tip_ltd.txt", 0},
-  {GL_T_VOCA, 'v', "voca_tip_ltd.txt", 0},
-  {GL_T_GRAM, 'g', "gram_tip_ltd.txt", 0},
-  {GL_T_SENTENCE, 's', "sentence_tip_ltd.txt", 0},
+  {BDT_PT, 't', "phonsym_tip_ltd.txt", 0},
+  {BDT_PG, 'p', "phonsym_tip_ltd.txt", 0},
+  {BDT_RF, 'r', "rfix_tip_ltd.txt", 0},
+  {BDT_V, 'v', "voca_tip_ltd.txt", 0},
+  {BDT_G, 'g', "gram_tip_ltd.txt", 0},
+  {BDT_S, 's', "sentence_tip_ltd.txt", 0},
 };
 
 #define GET_FILE_LINENR1	"sed -n '$=' ../conf/%s"
@@ -463,7 +463,7 @@ void command_init()
   char res_buf[48]={0};
 
   /* calculate the length of tip-files */
-  for (i=0; i<GL_T_MAX; i++)
+  for (i=0; i<BDT_BDTMAX; i++)
   {
     snprintf(buf, sizeof(buf), GET_FILE_LINENR2, "tips", glt_wtips[i].w_tipe_file);
     shell_command(buf, res_buf, sizeof(res_buf));
@@ -579,12 +579,12 @@ int cmd_modify(struct ltsys *lts, int iargc, char **iargv, void *priv)
   { cmd_modify_help(); return 1;}
   else
   {
-    for (type=0; type<GL_T_MAX; type++)
+    for (type=0; type<BDT_BDTMAX; type++)
     {
       if (iargv[2][0] == glt_wtips[type].obj_type_char)
 	break;
     }
-    if (type == GL_T_MAX)
+    if (type == BDT_BDTMAX)
     { cmd_modify_help(); return 1;}
   }
 

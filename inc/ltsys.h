@@ -4,17 +4,9 @@
 #include <stdio.h>
 #include "vs.h"
 #include "util.h"
+#include "glue.h"
 
 #define DEFAULT_NUM_PER_LOAD	30
-
-#define ERROR(msg) \
-  do { perror(msg); exit(EXIT_FAILURE); } while (0)
-
-#define INFO(msg) \
-  do { perror(msg); } while (0)
-
-#define PINFO(msg) \
-  do { printf("%s\n", msg); } while (0)
 
 /////////////////////////////////////////////////////////////
 //  ltsys 

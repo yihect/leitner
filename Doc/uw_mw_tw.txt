@@ -1,0 +1,49 @@
+GRAM:
+	A, UW:
+A.part_noun	1> NOUN, etc. (8 POF, link every sub-categories in VOCA-UW)
+
+A.part_sent	2> simpile sentences, complex sentences, compound sentences, and compound-complex sentences.
+
+	B, MW:
+B.part_noun	1> sub categories of every major POFs, such as uncountable_nouns, countable_nouns etc.
+		2> usage of those POF, such as nouns as subject, as object of transitive verb, as preposition etc. others may including:
+			a, some special nouns(actually to-do, doing, caluse) used as predictive.
+
+B.part_sent	3> different kind of complex sentences constructed with different subordinating_conjunction-headed independent clause.
+		   like: nouns clauses as subject, noun clause as vt object, noun clasuses as preposition object, adjective clauses, adverb
+		   clauses for condition, contrast and place/time etc.
+		4> different kind of compound sentences made by different ways:
+			a, coordinating conjuction and a comma;
+			b, a conjunctive adverb, a comma (usually), and a semicolon;
+			c, just a semicolon.
+
+B.part_conj	5> three types of conjuction, such as: subordinating conjuction, coordinating conjection and correlative conjunctions.
+
+	C, TW:
+C.part_noun	1> sub_sub categories of every sub categories in MW nodes, such as those concrete types of uncountable nouns:
+			a. nouns that have no distinct separate parts, we look as a whole. like air,blood,glass,milk,meat,pork etc.
+			b, nouns that have parts that are too small to count. like rice,grass,hair,salt,sand,sugar etc.
+			c, nouns that are general categories or terms of things, like closing,food,fruit,furniture,luggage etc.
+			d, nouns that are abstractions, like art,life,love,truth,work  etc.
+			e, nouns mean subject of study, such as history,biology,chemistry etc.
+		2> special usage of sub categories in GRAM-MW, such as uncountable nouns used as countable, like a tea, a bear etc.
+
+C.part_sent	3> concrete subordinating conjuction, such as because, when, if etc.
+		4> different kinds of coordinating conjunction, such as for, and, but, nor, or, yet, and so etc.
+
+C.part_conj	5> different correlative conjunctions, or paired conjunctions, namely sets of conjunctions that are always used together.
+		   such as:  both...and, either...or, not...but, neither...nor, not only...but also, etc
+
+
+
+VOCA:
+	A, UW:
+		1> usage scene or scenario of usage, like Personal Characteristics, food, animals, words used when shopping or travelling etc.
+
+	B, MW:
+		1> concrete vocabulary.
+
+	C, TW:
+		1> every meaning or usage of every concrete vocabulary.
+
+

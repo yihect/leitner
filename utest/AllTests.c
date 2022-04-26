@@ -4,7 +4,7 @@
 #include "util_tests.h"
 #include "enum_hash_tests.h"
 #include "glue_tests.h"
-//#include "glue_eng_tests.h"
+#include "glue_eng_tests.h"
 #include "mempool_tests.h"
 #include "objpool_tests.h"
 #include "cvspool_tests.h"
@@ -23,7 +23,7 @@ void RunAllTests(void)
 	CuSuiteAddSuite(suite, util_getsuite());
 	CuSuiteAddSuite(suite, enum_hash_getsuite());
 	CuSuiteAddSuite(suite, glue_getsuite());
-	//CuSuiteAddSuite(suite, glue_eng_getsuite());
+	CuSuiteAddSuite(suite, glue_eng_getsuite());
 	CuSuiteAddSuite(suite, mempool_getsuite());
 	CuSuiteAddSuite(suite, objpool_getsuite());
 	CuSuiteAddSuite(suite, cvspool_getsuite());
