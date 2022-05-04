@@ -12,7 +12,7 @@ struct parse_context {
   char *ptr;		// ltd file content in memory, copied in read_file()
   char *text;		// text parsed with T_TEXT
   int line;		// lines in ltd file. Parse as a T_NEWLINE for a normal line,
-  			// but for a continu line(ended by a '\' character), we just
+			// but for a continue line(ended by a '\' character), we just
 			// do line++, are't parse as new T_NEW_LINE. And at the last
 			// continue line, we parse as a new T_TEXT.
   int nexttoken;

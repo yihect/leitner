@@ -10,11 +10,11 @@ CuSuite* parser_getsuite()
   SUITE_ADD_TEST(suite, test_parser);
   return suite;
 }
- 
+
 /* tests */
 void test_parser(CuTest *tc)
 {
-  ltd_parse_file("./utest/test_parse.ltd");
+  ltd_parse_file("../utest/example.ltd");
 }
 
 

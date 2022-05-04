@@ -1,0 +1,11 @@
+#{
+  VGRP% dddly {
+    RFREF.[ddd, -ly];
+    ITEM%  ddd_trv: \
+      "it's meaning.";
+    ITEM% trv2:
+	"the 2nd meaning";
+    ITEM% : "test the 3rd meaning";
+  }
+#}
+

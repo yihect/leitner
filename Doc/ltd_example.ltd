@@ -5,8 +5,15 @@
   ENUM vut_str {_trv, _intrv, _cn, _un, ...}
 #}
 #{
+  RFX% un- {
+    ITEM% un-: "no,negative";
+  }
+#}
+#{
   RFX% -able {
-    ITEM% -able_adj: "";
+   ITEM% -able_adj: "
+           asdef
+           sfsf";
   }
 #}
 #{
@@ -14,7 +21,7 @@
     ITEM% give_trv1: "meaning usage 1";
     ITEM% give_trv2.[gave,given]: \
 	"meaning usage 2";
-    ITEM% give_intrv: "usage as intrv";		
+    ITEM% give_intrv: "usage as intrv";
   }
   VGRP% give_up {
     ITEM% VREF.[give_trv1, up_prep, ...]  \
@@ -39,7 +46,7 @@
     ITEM% give_trv1: "meaning usage 1";
     ITEM% give_trv2.[gave,given]: \
 	"meaning usage 2";
-    ITEM% give_intrv: "usage as intrv";		
+    ITEM% give_intrv: "usage as intrv";
   }
 #}
 #{

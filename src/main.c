@@ -32,7 +32,7 @@ static char *less_argv[] = {
   "/usr/bin/less",
   "-r",
   "-F",
-  "-E",
+  /*"-E", */
   "-X",
   "-Ps -- MORE --  forward\\: <SPACE>, <ENTER> or j  backward\\: b or k  quit\\: q",
   NULL
@@ -493,6 +493,9 @@ int main(int argc, char *argv[])
   if ((argc == 2) 
       && (strcmp(argv[1], "--test"))==0)
   {
+	  printf("sizeof(unsigned int) : %d, enum:%d \n", sizeof(unsigned int), GLT_UW_PTRANS);
+	  printf("sizeof(struct glue_wrapper) :%d\n", sizeof(struct glue_wrapper));
+	  printf("sizeof(struct dataroot) :%d\n", sizeof(struct dataroot));
     RunAllTests();
     return 0;
   }

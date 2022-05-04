@@ -8,9 +8,10 @@
 #define SECTION 0x01
 #define OPTION  0x02
 
-#define T_EOF 	0
-#define T_TEXT 	1
+#define T_EOF	0
+#define T_TEXT	1
 #define T_NEWLINE 2
+#define T_CONTLINE 3	// continue line when without \n char
 
 #define INTT_PARSER_MAXARGS	12
 
@@ -118,6 +119,8 @@ int next_token(struct parse_context *state)
 {
   char *x = state->ptr;
   char *s;
+  static unsigned brace_cnt = 0;	// count for brace character ({|})
+  static unsigned line_real_termed = 0; // flag to indicate line really termed when encount a semicolon
 
   if (state->nexttoken) {
     int t = state->nexttoken;
@@ -131,9 +134,18 @@ int next_token(struct parse_context *state)
 	state->ptr = x;
 	return T_EOF;
       case '\n':
-	x++;
-	state->ptr = x;
-	return T_NEWLINE;
+	if (brace_cnt>0 && !line_real_termed) {
+		*x = ' ';
+		x++;
+		state->ptr = x;
+		return T_CONTLINE;
+	} else {
+		/* reach here means real line end */
+		x++;
+		state->ptr = x;
+		line_real_termed = 0;	// reset
+		return T_NEWLINE;
+	}
       case ' ':
       case '\t':
       case '\r':
@@ -169,9 +181,22 @@ textresume:
       case '\r':
       case '.':
       case ':':
-      case ';':
 	x++;
 	goto textdone;
+      case ';':
+	x++;
+	line_real_termed = 1;	// indicate line true termed
+	goto textdone;
+      case '{':
+	brace_cnt++;
+	x++;
+	s++;
+	break;
+      case '}':
+	brace_cnt--;
+	x++;
+	s++;
+	break;
       case '\n':
 	state->nexttoken = T_NEWLINE;
 	x++;
@@ -278,7 +303,7 @@ static void parse_ltd(const char *fn, char *s)
 	    parse_new_section(&state, kw, nargs, args);
 	    state.pcn[state.cur_level].parse_line(&state, nargs, args);
 	  } else if(kw != K_UNKNOWN) {
-	    /* for XREF keywords, they must be placed in front of level zero
+	    /* for XREF keywords, they must be placed in front of level one
 	     * block, before any ITEM clauses.
 	     * So we can use parse_line() ptr at current level in pcn[] array*/
 	    state.pcn[state.cur_level].parse_line(&state, nargs, args);
@@ -290,6 +315,9 @@ static void parse_ltd(const char *fn, char *s)
 	if (nargs < INTT_PARSER_MAXARGS) {
 	  args[nargs++] = state.text;
 	}
+	break;
+      case T_CONTLINE:
+	//do nothing
 	break;
     }
   }

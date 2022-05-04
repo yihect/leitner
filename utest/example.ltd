@@ -1,0 +1,32 @@
+
+#{
+  VOC% dislike.like {
+    RFREF.[dis-];
+    ITEM% dislike_noun.[dislikes]:
+	"a feeling of not liking or approving of something or someone.";
+    ITEM% dislike_trv.[disliked, disliked]: "to not like something or someone";
+  }
+  VGRP% xxxroootyyy_up {
+    ITEM% VREF.[xxxroootyyy_trv1, xxxroootyyy_noun2, up_prep, ...]  \
+      xxxroootyyy_up_meaning1:
+      "meaning";
+  }
+#}
+
+#{
+  VOC% ddd {
+    ITEM% RFREF.[d, dd] \
+      ddd: \
+      "it's meaning.";
+    ITEM% : "the 2nd meaning";
+    ITEM% :\
+"test the 3rd meaning";
+    ITEM% :
+"test the 44444st meaning";
+    ITEM%
+ ddd_pron:
+		"haha, the 4th meaning.";
+  }
+#}
+
+
